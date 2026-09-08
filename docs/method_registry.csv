@@ -1,0 +1,40 @@
+method,family,produced_by_script
+GP_Matern32_EI,Gaussian Processes,families/core29_gp_ml_tree_rl_mof.py
+GP_Matern52_EI_BASELINE,Gaussian Processes,families/core29_gp_ml_tree_rl_mof.py
+BOOTRF_EI_BASELINE,Machine Learning,families/core29_gp_ml_tree_rl_mof.py
+GP_RBF_EI,Gaussian Processes,families/core29_gp_ml_tree_rl_mof.py
+GP_RationalQuadratic_EI,Gaussian Processes,families/core29_gp_ml_tree_rl_mof.py
+GP_Matern52_PI,Acquisition Ablation,families/core29_gp_ml_tree_rl_mof.py
+GP_Matern52_UCB,Acquisition Ablation,families/core29_gp_ml_tree_rl_mof.py
+GP_Matern32_PI,Acquisition Ablation,families/core29_gp_ml_tree_rl_mof.py
+GP_Matern32_UCB,Acquisition Ablation,families/core29_gp_ml_tree_rl_mof.py
+GP_Matern52_TS,Acquisition Ablation,families/core29_gp_ml_tree_rl_mof.py
+GP_Matern32_TS,Acquisition Ablation,families/core29_gp_ml_tree_rl_mof.py
+MOF_Greedy_GP_Matern52,MOF-specific,families/core29_gp_ml_tree_rl_mof.py
+MOF_Quantile90_GP_Matern52,MOF-specific,families/core29_gp_ml_tree_rl_mof.py
+MOF_CVaR90_GP_Matern52,MOF-specific,families/core29_gp_ml_tree_rl_mof.py
+MOF_Diversity_EI_GP_Matern52,MOF-specific,families/core29_gp_ml_tree_rl_mof.py
+RGASP_Matern52_EI_nugget,Gaussian Processes,families/rgasp_bnn.py
+LAGP_ALC_EI,Approximate GPs,families/lagp.py
+LAGP_NN_EI,Approximate GPs,families/lagp.py
+RFFGP_EI,Approximate GPs,families/core29_gp_ml_tree_rl_mof.py
+FITCGP_Nystroem_EI,Approximate GPs,families/core29_gp_ml_tree_rl_mof.py
+BLM_EI,Basis Regression,families/core29_gp_ml_tree_rl_mof.py
+RVM_like_ARD_RFF_EI,Basis Regression,families/rvm_like.py
+BART_like_ExtraTrees_EI,Basis Regression,families/core29_gp_ml_tree_rl_mof.py
+CONFRF_EI,Machine Learning,families/core29_gp_ml_tree_rl_mof.py
+BNN_like_MLPensemble_EI,Machine Learning,families/rgasp_bnn.py
+GBC_like_QuantileBoosting_EI,Machine Learning,families/core29_gp_ml_tree_rl_mof.py
+GBC_like_QuantileBoosting_Q90,Machine Learning,families/core29_gp_ml_tree_rl_mof.py
+RL_Contextual_LinUCB,Reinforcement Learning,families/core29_gp_ml_tree_rl_mof.py
+RL_Contextual_LinUCB_Quantile90,Reinforcement Learning,families/core29_gp_ml_tree_rl_mof.py
+MOF_ChemBandit_UCB_TailWeighted,Reinforcement Learning,families/core29_gp_ml_tree_rl_mof.py
+MOF_ChemBandit_TS_TailWeighted,Reinforcement Learning,families/core29_gp_ml_tree_rl_mof.py
+MOF_ChemBandit_Quantile90_TailWeighted,Reinforcement Learning,families/core29_gp_ml_tree_rl_mof.py
+MOF_ChemBandit_CVaR90_TailWeighted,Reinforcement Learning,families/core29_gp_ml_tree_rl_mof.py
+RANDOM_SEARCH,Baseline,families/core29_gp_ml_tree_rl_mof.py
+LLM_PURE_gpt-4o,LLM,families/llm_pure_gpt4o_gpt55.py
+LLM_PURE_gpt-5.5,LLM,families/llm_pure_gpt4o_gpt55.py
+LLM_PURE_gpt-5-mini,LLM,families/llm_pure_gpt5mini.py
+HYBRID_GP_Matern52_EI_ALT_gpt-5.5,LLM-GP Hybrid,families/hybrid_gp_llm.py
+HYBRID_GP_Matern52_PI_ALT_gpt-5.5,LLM-GP Hybrid,families/hybrid_gp_llm.py
