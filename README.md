@@ -56,7 +56,7 @@ python plotting/fig3.py
 
 ## What's in `docs/`
 
-The `docs/` directory contains (i) [`data_dictionary.md`](docs/data_dictionary.md), giving the column schema for the virtual sandbox and the benchmark output, along with feature ranges and the `q_final` definition; (ii) [`method_registry.csv`](docs/method_registry.csv), listing all thirty-nine methods, their family, and the script under `benchmark/families/` by which each is produced; and (iii) [`reproducibility_fix_log_llm_seed_and_lagp_bug.md`](docs/reproducibility_fix_log_llm_seed_and_lagp_bug.md) and [`reproducibility_analysis_overview.md`](docs/reproducibility_analysis_overview.md), the project's own internal accounts, written in Chinese, of two genuine bugs surfaced during a rigor review, namely an LLM API call lacking seed and temperature control, and a laGP argument-name error that silently degraded two methods toward random search. These documents record what was found, how it was verified, and how it was resolved, and are retained herein for provenance rather than rewritten, given that they document the investigation as it actually unfolded.
+The `docs/` directory contains (i) [`data_dictionary.md`](docs/data_dictionary.md), giving the column schema for the virtual sandbox and the benchmark output, along with feature ranges and the `q_final` definition; and (ii) [`method_registry.csv`](docs/method_registry.csv), listing all thirty-nine methods, their family, and the script under `benchmark/families/` by which each is produced.
 
 ## Provenance and what "unchanged implementation" means here
 

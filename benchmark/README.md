@@ -25,7 +25,7 @@ Twenty-nine methods from `core29`, together with two, two, one, two, one, and tw
 
 ## Why 7 separate scripts instead of one
 
-Each of the six non-`core29` scripts is a **verbatim copy**, with only `POOL_DIR`, `OUTPUT_DIR`, and `R_HOME` repointed at this repository's layout, diffed against the originals line by line with zero other changes, of a script individually validated in this project against a real rerun. For the five LLM-touching methods, this validation included a live canary API call that hard-fails the run should the server silently drop the `seed` or `reasoning_effort` parameters. Nothing about any method's mathematics, acquisition function, prompt, or model parameter was altered in packaging it here. See `../docs/` for the history of what was found and fixed, comprising an LLM seed and temperature bug and a laGP argument-name bug, both genuine, both remedied, and both re-validated with real reruns before this repository existed.
+Each of the six non-`core29` scripts is a **verbatim copy**, with only `POOL_DIR`, `OUTPUT_DIR`, and `R_HOME` repointed at this repository's layout, diffed against the originals line by line with zero other changes, of a script individually validated in this project against a real rerun. For the five LLM-touching methods, this validation included a live canary API call that hard-fails the run should the server silently drop the `seed` or `reasoning_effort` parameters. Nothing about any method's mathematics, acquisition function, prompt, or model parameter was altered in packaging it here; an LLM seed and temperature bug and a laGP argument-name bug, both genuine, were remedied and re-validated with real reruns before this repository existed.
 
 ## How seed, temperature, and reasoning_effort are actually handled
 
@@ -33,7 +33,7 @@ Each of the six non-`core29` scripts is a **verbatim copy**, with only `POOL_DIR
 
 ### Resolved model snapshots (observed 2026-09-08)
 
-The three model names used in code, `gpt-4o`, `gpt-5.5`, and `gpt-5-mini`, are **generic aliases rather than pinned dated snapshots**, and OpenAI can silently move an alias to a newer underlying model at any time, constituting a genuine reproducibility gap (see `../docs/`). As of the date above, they resolved as follows.
+The three model names used in code, `gpt-4o`, `gpt-5.5`, and `gpt-5-mini`, are **generic aliases rather than pinned dated snapshots**, and OpenAI can silently move an alias to a newer underlying model at any time, constituting a genuine reproducibility gap. As of the date above, they resolved as follows.
 
 | Alias in code | Resolved snapshot | How confirmed |
 |---|---|---|
