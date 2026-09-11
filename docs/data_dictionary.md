@@ -25,9 +25,10 @@ Intensity_final, FWHM_final, q_final, rule_applied
 
 - Full grid size: 6,101,172 rows (every integer combination of the five
   variables within their ranges above).
-- `label_id`: rows starting with `Q`/`q` are the ~96 real experimental
-  conditions (ground truth); everything else (`Y0000001`, `Y0000002`, ...) is
-  RF-predicted/rule-blended.
+- `label_id`: rows starting with `Q`/`q` are the 95 real experimental
+  conditions (ground truth, confirmed by direct count across the shipped
+  files); everything else (`Y0000001`, `Y0000002`, ...) is RF-predicted or
+  rule-blended.
 - To keep only real experimental rows: `df['label_id'].astype(str).str.startswith(('Q','q'))`.
   To exclude them (the usual "simulation pool" view): negate that mask.
 - `q_final = round(Intensity_final / FWHM_final)`, with the fallback rule

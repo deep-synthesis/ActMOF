@@ -8,9 +8,11 @@
 # no numerical logic, model, or rule was changed.
 #
 # What this does, in one paragraph: fits two RandomForestRegressor models
-# (rf_int -> Intensity_exp, rf_fwhm -> FWHM_exp) on the ~96 unique real
+# (rf_int -> Intensity_exp, rf_fwhm -> FWHM_exp) on the 95 unique real
 # microwave-synthesis experiments hardcoded below (X / max_intensity / FWHM
-# arrays), then walks the full 5-variable grid implied by BOUNDS
+# arrays; 96 raw measurements collapse to 95 unique conditions after
+# grouping, see the "2) Experimental dataset" comment below), then walks
+# the full 5-variable grid implied by BOUNDS
 # (6,101,172 conditions) and, for every non-experimental point, predicts
 # Intensity/FWHM with those two RFs and blends the prediction with nearby
 # real experiments (Rule 1: neighbors within Chebyshev distance 1 -> 80%
@@ -81,7 +83,7 @@ BATCH_ROWS = 50_000          # prediction batch size. Tune for memory and speed
 PROGRESS_EVERY_ROWS = 100_000
 N_TREES = 400
 
-# 2) Experimental dataset (96 unique runs)
+# 2) Experimental dataset (96 raw measurements, 95 unique conditions after grouping)
 X = np.array([
     [35,5,22,9,14],[68,7,15,12,24],[12,9,1,7,29],[36,10,24,3,18],[55,11,8,2,15],
     [69,6,23,1,20],[14,12,2,11,15],[42,7,27,6,17],[9,14,7,4,11],[45,6,11,8,28],
