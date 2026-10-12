@@ -1,0 +1,4 @@
+method,n_runs,stalled_any,stalled_after_first_product,median_final_n_pos,status
+B0,20,2,0,67.0,"exploratory, descriptive"
+M1,20,11,10,51.5,"exploratory, descriptive"
+M3,20,5,3,61.0,"exploratory, descriptive"

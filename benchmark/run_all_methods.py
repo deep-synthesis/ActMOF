@@ -1,43 +1,22 @@
-"""
-run_all_methods.py -- single entry point for all 39 ActMOF benchmark methods.
+"""run_all_methods.py -- single entry point for the 39 strategies of the ActMOF benchmark.
 
-This is NEW orchestration code written for this repo. It does not contain or
-reimplement any method logic itself -- it only runs each of the 7 family
-scripts under families/ (1 covering 29 methods, the other 6 covering 10
-methods between them) as a separate process (exactly as if you had typed
-`python families/<script>.py` yourself) and then calls merge_outputs.py.
-Each family script is a verbatim (config-paths-only-changed) copy of one of
-this project's own validated, seed-controlled rerun scripts -- see docs/ for
-what "validated" means here and where each script's data has been checked
-against the previously-published results.
+Runs each of the 7 scripts in families/ as a separate process, then merge_outputs.py. It contains no method logic.
+The strategies are kept in separate scripts because they need different software (R, OpenAI API) and consume random
+numbers in their own way; sharing code between them could change their results.
 
-Why 6 separate scripts instead of one shared codebase: each family script was
-independently validated (including, for the 5 LLM-touching methods, a live
-"canary" API call that hard-fails the run if the server silently drops the
-seed) against real re-runs. Merging their internals into shared helper
-functions was judged higher-risk than keeping them separate, since even
-small refactors could silently change the RNG consumption pattern (see
-core29_gp_ml_tree_rl_mof.py's own docstring for a worked example of exactly
-that happening between two earlier drafts of this codebase). This script
-only adds an orchestration layer on top; nothing below it changes any
-method's math.
-
-Cost / requirements per family (see benchmark/README.md for detail):
-    core29_gp_ml_tree_rl_mof   29 methods, pure Python, no R, $0
-    lagp                        2 methods, needs R + laGP,  $0
-    rgasp_bnn                   2 methods, needs R + RobustGaSP, $0
-    rvm_like                    1 method,  pure Python, $0
-    llm_pure_gpt4o_gpt55        2 methods, needs OPENAI_API_KEY, real $ cost
-    llm_pure_gpt5mini           1 method,  needs OPENAI_API_KEY, real $ cost (cheap)
-    hybrid_gp_llm               2 methods, needs OPENAI_API_KEY, real $ cost
-
-Usage:
-    python run_all_methods.py                       # run everything, then merge
+    python run_all_methods.py                          # everything
     python run_all_methods.py --only core29_gp_ml_tree_rl_mof,rvm_like
-    python run_all_methods.py --skip lagp,rgasp_bnn  # e.g. no R available
-    python run_all_methods.py --list                # show families and exit
-    python run_all_methods.py --merge-only           # just (re)build the merged CSV
-    python run_all_methods.py --dry-run              # print commands, run nothing
+    python run_all_methods.py --skip lagp,rgasp_bnn
+    python run_all_methods.py --list | --dry-run
+
+Requirements per family (details in README.md):
+    core29_gp_ml_tree_rl_mof   29 strategies, Python only
+    rvm_like                    1 strategy,   Python only
+    lagp                        2 strategies, R + laGP
+    rgasp_bnn                   2 strategies, R + RobustGaSP
+    llm_pure_gpt4o_gpt55        2 strategies, OPENAI_API_KEY (billed)
+    llm_pure_gpt5mini           1 strategy,   OPENAI_API_KEY (billed)
+    hybrid_gp_llm               2 strategies, OPENAI_API_KEY (billed)
 """
 from __future__ import annotations
 

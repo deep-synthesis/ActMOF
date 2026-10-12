@@ -1,0 +1,590 @@
+####################################################################### 
+# 
+# This file contains crystal structure data downloaded from the 
+# Cambridge Structural Database (CSD) hosted by the Cambridge 
+# Crystallographic Data Centre (CCDC).
+# 
+# Full information about CCDC data access policies and citation 
+# guidelines are available at http://www.ccdc.cam.ac.uk/access/V1 
+# 
+# Audit and citation data items may have been added by the CCDC. 
+# Please retain this information to preserve the provenance of 
+# this file and to allow appropriate attribution of the data. 
+# 
+#######################################################################
+
+data_CAU-23
+_audit_block_doi                 10.5517/ccdc.csd.cc21223b
+_database_code_depnum_ccdc_archive 'CCDC 1878820'
+loop_
+_citation_id
+_citation_doi
+_citation_year
+1 10.1038/s41467-019-10960-0 2019
+loop_
+_audit_author_name
+_audit_author_address
+'Andrew Kentaro Inge'
+;Stockholm University
+Sweden
+;
+_audit_update_record             
+;
+2018-11-13 deposited with the CCDC.	2026-08-07 downloaded from the CCDC.
+;
+
+_chemical_name_mineral           CAU-23
+_chemical_formula_sum            'C48 Al8 O72 S8'
+_chemical_formula_weight         2200.80
+_cell_formula_units_Z            2
+
+_cell_length_a                   15.4370(14)
+_cell_length_b                   24.0600(16)
+_cell_length_c                   14.2606(12)
+_cell_angle_alpha                90
+_cell_angle_beta                 90
+_cell_angle_gamma                90
+_cell_volume                     5296.6(8)
+_cell_measurement_temperature    300
+
+_symmetry_cell_setting           orthorhombic
+_symmetry_space_group_name_Hall  'P 2 2ab'
+_symmetry_space_group_name_H-M   'P 21 21 2'
+_symmetry_Int_Tables_number      18
+
+loop_
+_symmetry_equiv_pos_as_xyz
+'x, y, z '
+'-x+1/2, y+1/2, -z '
+'-x, -y, z '
+'x+1/2, -y+1/2, -z '
+
+_exptl_crystal_description       powder
+_exptl_crystal_F_000             2192
+_exptl_absorpt_coefficient_mu    3.086
+
+_diffrn_measurement_device_type  'STOE STADI P diffractometer'
+_diffrn_ambient_temperature      300
+_diffrn_radiation_wavelength     1.5406
+
+_pd_meas_number_of_points        5005
+_pd_meas_2theta_range_min        5.010
+_pd_meas_2theta_range_max        80.085
+_pd_meas_2theta_range_inc        0.015
+
+
+_pd_proc_ls_prof_R_factor        3.174
+_pd_proc_ls_prof_wR_factor       4.146
+_pd_proc_ls_prof_wR_expected     0.338
+_refine_ls_goodness_of_fit_all   12.271
+_refine_ls_R_I_factor            1.856
+_refine_ls_number_parameters     127
+
+loop_
+_atom_site_label
+_atom_site_type_symbol
+_atom_site_symmetry_multiplicity
+_atom_site_fract_x
+_atom_site_fract_y
+_atom_site_fract_z
+_atom_site_occupancy
+_atom_site_B_iso_or_equiv
+Al1 Al 4 0.071(3) 0.4547(17) 0.169(3) 1 0.1
+Al2 Al 4 0.388(3) 0.8386(18) 0.709(3) 1 0.1
+Al3 Al 4 0.455(3) 0.703(2) 0.728(3) 1 0.1
+Al4 Al 4 0.495(3) 0.5670(17) 0.740(3) 1 0.1
+O1 O 2 0.5 0.5 0.814(8) 1 3
+O2 O 4 0.481(5) 0.632(3) 0.670(6) 1 3
+O3 O 4 0.430(6) 0.775(4) 0.778(6) 1 3
+O4 O 4 0.031(6) 0.389(3) 0.231(6) 1 3
+O5 O 2 0 0.5 0.252(8) 1 3
+S11 S 4 0.171(2) 0.7628(11) 0.494(2) 1 3
+C11 C 4 0.230(3) 0.7192(15) 0.563(3) 1 3
+C12 C 4 0.204(4) 0.6654(13) 0.557(4) 1 3
+C13 C 4 0.134(4) 0.6591(12) 0.495(4) 1 3
+C14 C 4 0.110(3) 0.7083(14) 0.456(3) 1 3
+C15 C 4 0.301(3) 0.743(2) 0.621(3) 1 3
+O16 O 4 0.365(5) 0.713(3) 0.646(6) 1 3
+O17 O 4 0.298(4) 0.794(3) 0.644(6) 1 3
+C16 C 4 0.040(3) 0.720(2) 0.388(4) 1 3
+O18 O 4 0.044(4) 0.763(3) 0.336(5) 1 3
+O19 O 4 -0.024(4) 0.687(3) 0.381(6) 1 3
+S21 S 4 0.2046(17) 0.9389(10) 0.513(2) 1 3
+C21 C 4 0.262(3) 0.9766(15) 0.592(3) 1 3
+C22 C 4 0.249(4) 1.0323(13) 0.584(4) 1 3
+C23 C 4 0.191(4) 1.0449(10) 0.511(4) 1 3
+C24 C 4 0.162(3) 0.9984(12) 0.467(3) 1 3
+C25 C 4 0.318(3) 0.946(2) 0.659(3) 1 3
+O26 O 4 0.343(5) 0.897(3) 0.641(4) 1 3
+O27 O 4 0.341(6) 0.969(3) 0.736(4) 1 3
+C26 C 4 0.100(3) 0.993(2) 0.387(3) 1 3
+O28 O 4 0.056(5) 1.035(3) 0.362(6) 1 3
+O29 O 4 0.092(5) 0.947(3) 0.345(4) 1 3
+S31 S 4 0.2414(17) 0.5565(9) 0.9476(19) 1 3
+C31 C 4 0.265(3) 0.6169(10) 0.891(3) 1 3
+C32 C 4 0.208(3) 0.6583(11) 0.910(4) 1 3
+C33 C 4 0.143(3) 0.6408(14) 0.973(4) 1 3
+C34 C 4 0.153(2) 0.5868(13) 0.998(3) 1 3
+C35 C 4 0.342(3) 0.6180(16) 0.829(3) 1 3
+O36 O 4 0.388(4) 0.574(2) 0.819(5) 1 3
+O37 O 4 0.363(5) 0.662(2) 0.786(6) 1 3
+C36 C 4 0.099(3) 0.5526(18) 1.063(3) 1 3
+O38 O 4 0.020(3) 0.564(3) 1.074(6) 1 3
+O39 O 4 0.133(4) 0.512(2) 1.106(5) 1 3
+S41 S 4 0.194(2) 0.8913(9) 0.024(2) 1 3
+C41 C 4 0.131(3) 0.8376(14) 0.062(3) 1 3
+C42 C 4 0.143(4) 0.7905(13) 0.011(4) 1 3
+C43 C 4 0.204(4) 0.7979(14) -0.061(4) 1 3
+C44 C 4 0.237(3) 0.8503(15) -0.062(3) 1 3
+C45 C 4 0.073(3) 0.847(2) 0.143(3) 1 3
+O46 O 4 0.047(7) 0.807(3) 0.192(5) 1 3
+O47 O 4 0.049(5) 0.897(3) 0.163(5) 1 3
+C46 C 4 0.303(3) 0.875(2) -0.125(3) 1 3
+O48 O 4 0.359(4) 0.909(4) -0.093(3) 1 3
+O49 O 4 0.304(5) 0.862(4) -0.211(3) 1 3
+Ow1 O 4 -0.456(5) -0.116(3) 0.299(6) 1 3
+Ow2 O 4 0.615(6) 0.308(3) 0.356(5) 1 3
+Ow3 O 4 -0.234(5) 0.127(3) 2.267(5) 1 3
+Ow4 O 4 0.949(5) 0.716(3) 1.024(5) 1 3
+Ow5 O 4 0.973(6) 1.262(3) -0.263(6) 1 3
+Ow6 O 4 0.122(6) 0.308(4) 1.618(5) 1 3
+Ow7 O 4 -0.092(5) 0.586(3) 0.874(6) 1 3
+Ow8 O 4 1.128(5) 0.699(3) 0.179(5) 1 3
+Ow9 O 4 0.369(5) 1.342(4) 0.302(5) 1 3
+Ow10 O 4 -0.517(5) -0.649(3) 1.474(5) 1 3
+Ow11 O 4 1.449(5) 0.442(3) 0.253(6) 1 3
+Ow12 O 4 0.724(4) -0.639(3) 1.222(5) 1 3
+Ow13 O 4 1.123(5) -0.513(4) 0.713(6) 1 3
+Ow14 O 4 0.936(5) 0.924(3) 0.917(5) 1 3
+Ow15 O 4 1.885(5) 0.701(3) 1.844(6) 1 3
+Ow16 O 4 -0.390(5) 0.311(3) 0.080(6) 1 3
+
+# 10. MOLECULAR GEOMETRY
+
+_geom_special_details            
+;
+ Bond distances, angles etc. have been calculated using the
+ rounded fractional coordinates. All su's are estimated
+ from the variances of the (full) variance-covariance matrix.
+ The cell esds are taken into account in the estimation of
+ distances, angles and torsion angles
+;
+
+loop_
+_geom_bond_atom_site_label_1
+_geom_bond_atom_site_label_2
+_geom_bond_distance
+_geom_bond_site_symmetry_1
+_geom_bond_site_symmetry_2
+_geom_bond_publ_flag
+S11 C11 1.70(5) . . yes
+S11 C14 1.70(5) . . yes
+S21 C21 1.70(5) . . yes
+S21 C24 1.71(4) . . yes
+S31 C31 1.70(4) . . yes
+S31 C34 1.71(4) . . yes
+S41 C41 1.71(5) . . yes
+S41 C44 1.71(5) . . yes
+Al1 O4 1.91(9) . . yes
+Al1 O5 1.95(8) . . yes
+Al1 O39 1.90(7) . 1_554 yes
+Al1 O48 1.88(8) . 2_545 yes
+Al1 O27 1.95(9) . 2_546 yes
+Al1 O38 2.00(8) . 3_564 yes
+Al2 O3 1.93(10) . . yes
+Al2 O17 1.99(8) . . yes
+Al2 O26 1.84(8) . . yes
+Al2 O49 1.82(8) . 1_556 yes
+Al2 O4 1.94(10) . 2_556 yes
+Al2 O19 1.97(9) . 4_566 yes
+Al3 O2 1.94(9) . . yes
+Al3 O3 1.91(11) . . yes
+Al3 O16 1.83(9) . . yes
+Al3 O37 1.92(9) . . yes
+Al3 O18 1.84(8) . 4_566 yes
+Al3 O46 1.84(11) . 4_566 yes
+Al4 O1 1.93(8) . . yes
+Al4 O2 1.87(9) . . yes
+Al4 O36 2.01(8) . . yes
+Al4 O28 1.82(9) . 2_546 yes
+Al4 O29 1.96(8) . 4_566 yes
+Al4 O47 1.83(9) . 4_566 yes
+O16 C15 1.27(9) . . yes
+O17 C15 1.27(9) . . yes
+O18 C16 1.27(9) . . yes
+O19 C16 1.27(8) . . yes
+O26 C25 1.27(9) . . yes
+O27 C25 1.28(8) . . yes
+O28 C26 1.27(9) . . yes
+O29 C26 1.26(8) . . yes
+O36 C35 1.28(7) . . yes
+O37 C35 1.27(7) . . yes
+O38 C36 1.26(7) . . yes
+O39 C36 1.27(7) . . yes
+O46 C45 1.26(9) . . yes
+O47 C45 1.29(9) . . yes
+O48 C46 1.28(9) . . yes
+O49 C46 1.27(6) . . yes
+C11 C12 1.36(5) . . no
+C11 C15 1.49(6) . . no
+C12 C13 1.40(8) . . no
+C13 C14 1.36(5) . . no
+C14 C16 1.48(7) . . no
+C21 C22 1.36(5) . . no
+C21 C25 1.48(6) . . no
+C22 C23 1.41(8) . . no
+C23 C24 1.36(5) . . no
+C24 C26 1.50(6) . . no
+C31 C32 1.36(5) . . no
+C31 C35 1.48(6) . . no
+C32 C33 1.41(7) . . no
+C33 C34 1.36(5) . . no
+C34 C36 1.49(6) . . no
+C41 C42 1.36(5) . . no
+C41 C45 1.48(6) . . no
+C42 C43 1.41(8) . . no
+C43 C44 1.36(5) . . no
+C44 C46 1.48(6) . . no
+
+loop_
+_geom_angle_atom_site_label_1
+_geom_angle_atom_site_label_2
+_geom_angle_atom_site_label_3
+_geom_angle
+_geom_angle_site_symmetry_1
+_geom_angle_site_symmetry_2
+_geom_angle_site_symmetry_3
+_geom_angle_publ_flag
+C11 S11 C14 90(2) . . . yes
+C21 S21 C24 91(2) . . . yes
+C31 S31 C34 90(2) . . . yes
+C41 S41 C44 91(2) . . . yes
+O4 Al1 O5 90(3) . . . yes
+O4 Al1 O39 168(4) . . 1_554 yes
+O4 Al1 O48 88(4) . . 2_545 yes
+O4 Al1 O27 93(4) . . 2_546 yes
+O4 Al1 O38 84(4) . . 3_564 yes
+O5 Al1 O39 100(3) . . 1_554 yes
+O5 Al1 O48 178(4) . . 2_545 yes
+O5 Al1 O27 83(3) . . 2_546 yes
+O5 Al1 O38 98(3) . . 3_564 yes
+O39 Al1 O48 82(4) 1_554 . 2_545 yes
+O27 Al1 O39 81(3) 2_546 . 1_554 yes
+O38 Al1 O39 101(4) 3_564 . 1_554 yes
+O27 Al1 O48 96(3) 2_546 . 2_545 yes
+O38 Al1 O48 83(3) 3_564 . 2_545 yes
+O27 Al1 O38 177(4) 2_546 . 3_564 yes
+O3 Al2 O17 93(4) . . . yes
+O3 Al2 O26 177(4) . . . yes
+O3 Al2 O49 100(4) . . 1_556 yes
+O3 Al2 O4 93(4) . . 2_556 yes
+O3 Al2 O19 82(4) . . 4_566 yes
+O17 Al2 O26 84(4) . . . yes
+O17 Al2 O49 88(4) . . 1_556 yes
+O4 Al2 O17 174(4) 2_556 . . yes
+O17 Al2 O19 91(3) . . 4_566 yes
+O26 Al2 O49 80(4) . . 1_556 yes
+O4 Al2 O26 90(4) 2_556 . . yes
+O19 Al2 O26 99(4) 4_566 . . yes
+O4 Al2 O49 89(4) 2_556 . 1_556 yes
+O19 Al2 O49 178(4) 4_566 . 1_556 yes
+O4 Al2 O19 92(4) 2_556 . 4_566 yes
+O2 Al3 O3 177(5) . . . yes
+O2 Al3 O16 90(4) . . . yes
+O2 Al3 O37 83(4) . . . yes
+O2 Al3 O18 92(4) . . 4_566 yes
+O2 Al3 O46 89(4) . . 4_566 yes
+O3 Al3 O16 88(4) . . . yes
+O3 Al3 O37 99(4) . . . yes
+O3 Al3 O18 86(4) . . 4_566 yes
+O3 Al3 O46 93(4) . . 4_566 yes
+O16 Al3 O37 77(4) . . . yes
+O16 Al3 O18 101(4) . . 4_566 yes
+O16 Al3 O46 179(5) . . 4_566 yes
+O18 Al3 O37 175(4) 4_566 . . yes
+O37 Al3 O46 104(4) . . 4_566 yes
+O18 Al3 O46 78(4) 4_566 . 4_566 yes
+O1 Al4 O2 176(4) . . . yes
+O1 Al4 O36 78(3) . . . yes
+O1 Al4 O28 96(4) . . 2_546 yes
+O1 Al4 O29 100(3) . . 4_566 yes
+O1 Al4 O47 88(4) . . 4_566 yes
+O2 Al4 O36 98(3) . . . yes
+O2 Al4 O28 83(4) . . 2_546 yes
+O2 Al4 O29 84(4) . . 4_566 yes
+O2 Al4 O47 94(4) . . 4_566 yes
+O28 Al4 O36 97(4) 2_546 . . yes
+O29 Al4 O36 173(4) 4_566 . . yes
+O36 Al4 O47 85(3) . . 4_566 yes
+O28 Al4 O29 76(4) 2_546 . 4_566 yes
+O28 Al4 O47 176(4) 2_546 . 4_566 yes
+O29 Al4 O47 102(4) 4_566 . 4_566 yes
+Al4 O1 Al4 114(6) . . 3_665 yes
+Al3 O2 Al4 122(5) . . . yes
+Al2 O3 Al3 127(5) . . . yes
+Al1 O4 Al2 121(5) . . 2_546 yes
+Al1 O5 Al1 105(5) . . 3_565 yes
+Al3 O16 C15 147(6) . . . yes
+Al2 O17 C15 128(5) . . . yes
+Al3 O18 C16 128(5) 4_466 . . yes
+Al2 O19 C16 142(6) 4_466 . . yes
+Al2 O26 C25 136(5) . . . yes
+Al1 O27 C25 136(6) 2_556 . . yes
+Al4 O28 C26 142(6) 2_556 . . yes
+Al4 O29 C26 121(5) 4_466 . . yes
+Al4 O36 C35 126(4) . . . yes
+Al3 O37 C35 146(6) . . . yes
+Al1 O38 C36 136(6) 3_566 . . yes
+Al1 O39 C36 125(5) 1_556 . . yes
+Al3 O46 C45 134(7) 4_466 . . yes
+Al4 O47 C45 138(6) 4_466 . . yes
+Al1 O48 C46 124(4) 2_555 . . yes
+Al2 O49 C46 134(6) 1_554 . . yes
+S11 C11 C12 113(4) . . . yes
+S11 C11 C15 119(3) . . . yes
+C12 C11 C15 128(4) . . . no
+C11 C12 C13 112(4) . . . no
+C12 C13 C14 112(3) . . . no
+S11 C14 C13 113(4) . . . yes
+S11 C14 C16 118(3) . . . yes
+C13 C14 C16 129(4) . . . no
+O16 C15 O17 120(6) . . . yes
+O16 C15 C11 121(5) . . . yes
+O17 C15 C11 119(5) . . . yes
+O18 C16 O19 120(6) . . . yes
+O18 C16 C14 120(5) . . . yes
+O19 C16 C14 120(5) . . . yes
+S21 C21 C22 113(4) . . . yes
+S21 C21 C25 118(3) . . . yes
+C22 C21 C25 129(4) . . . no
+C21 C22 C23 112(4) . . . no
+C22 C23 C24 112(3) . . . no
+S21 C24 C23 113(4) . . . yes
+S21 C24 C26 118(3) . . . yes
+C23 C24 C26 129(4) . . . no
+O26 C25 O27 120(6) . . . yes
+O26 C25 C21 121(5) . . . yes
+O27 C25 C21 120(5) . . . yes
+O28 C26 O29 121(6) . . . yes
+O28 C26 C24 119(5) . . . yes
+O29 C26 C24 120(5) . . . yes
+S31 C31 C32 113(3) . . . yes
+S31 C31 C35 118(3) . . . yes
+C32 C31 C35 129(3) . . . no
+C31 C32 C33 112(3) . . . no
+C32 C33 C34 112(4) . . . no
+S31 C34 C33 113(3) . . . yes
+S31 C34 C36 118(3) . . . yes
+C33 C34 C36 129(4) . . . no
+O36 C35 O37 120(6) . . . yes
+O36 C35 C31 120(4) . . . yes
+O37 C35 C31 121(5) . . . yes
+O38 C36 O39 121(6) . . . yes
+O38 C36 C34 120(5) . . . yes
+O39 C36 C34 120(5) . . . yes
+S41 C41 C42 113(4) . . . yes
+S41 C41 C45 119(3) . . . yes
+C42 C41 C45 129(4) . . . no
+C41 C42 C43 112(4) . . . no
+C42 C43 C44 112(4) . . . no
+S41 C44 C43 113(4) . . . yes
+S41 C44 C46 118(3) . . . yes
+C43 C44 C46 129(4) . . . no
+O46 C45 O47 120(6) . . . yes
+O46 C45 C41 121(5) . . . yes
+O47 C45 C41 119(5) . . . yes
+O48 C46 O49 120(6) . . . yes
+O48 C46 C44 120(4) . . . yes
+O49 C46 C44 120(5) . . . yes
+
+loop_
+_geom_torsion_atom_site_label_1
+_geom_torsion_atom_site_label_2
+_geom_torsion_atom_site_label_3
+_geom_torsion_atom_site_label_4
+_geom_torsion
+_geom_torsion_site_symmetry_1
+_geom_torsion_site_symmetry_2
+_geom_torsion_site_symmetry_3
+_geom_torsion_site_symmetry_4
+_geom_torsion_publ_flag
+C14 S11 C11 C12 0(4) . . . . no
+C14 S11 C11 C15 -180(4) . . . . no
+C11 S11 C14 C13 0(4) . . . . no
+C11 S11 C14 C16 180(4) . . . . no
+C24 S21 C21 C22 0(4) . . . . no
+C24 S21 C21 C25 -180(4) . . . . no
+C21 S21 C24 C23 0(4) . . . . no
+C21 S21 C24 C26 -180(4) . . . . no
+C34 S31 C31 C32 0(4) . . . . no
+C34 S31 C31 C35 -180(4) . . . . no
+C31 S31 C34 C33 -1(4) . . . . no
+C31 S31 C34 C36 -180(3) . . . . no
+C44 S41 C41 C42 0(4) . . . . no
+C44 S41 C41 C45 180(4) . . . . no
+C41 S41 C44 C43 0(4) . . . . no
+C41 S41 C44 C46 -180(4) . . . . no
+O5 Al1 O4 Al2 -121(5) . . . 2_546 no
+O48 Al1 O4 Al2 57(5) 2_545 . . 2_546 no
+O27 Al1 O4 Al2 -39(6) 2_546 . . 2_546 no
+O38 Al1 O4 Al2 141(5) 3_564 . . 2_546 no
+O4 Al1 O5 Al1 -126(3) . . . 3_565 no
+O4 Al1 O48 C46 -56(7) . . 2_545 2_545 no
+O4 Al1 O27 C25 -2(8) . . 2_546 2_546 no
+O4 Al1 O38 C36 90(9) . . 3_564 3_564 no
+O17 Al2 O3 Al3 47(7) . . . . no
+O49 Al2 O3 Al3 135(6) 1_556 . . . no
+O4 Al2 O3 Al3 -135(6) 2_556 . . . no
+O19 Al2 O3 Al3 -43(6) 4_566 . . . no
+O3 Al2 O17 C15 -31(8) . . . . no
+O26 Al2 O17 C15 149(8) . . . . no
+O49 Al2 O17 C15 -131(8) 1_556 . . . no
+O19 Al2 O17 C15 50(8) 4_566 . . . no
+O17 Al2 O26 C25 131(9) . . . . no
+O49 Al2 O26 C25 42(9) 1_556 . . . no
+O4 Al2 O26 C25 -47(9) 2_556 . . . no
+O19 Al2 O26 C25 -139(8) 4_566 . . . no
+O3 Al2 O49 C46 55(10) . . 1_556 1_556 no
+O17 Al2 O49 C46 147(9) . . 1_556 1_556 no
+O26 Al2 O49 C46 -128(10) . . 1_556 1_556 no
+O3 Al2 O4 Al1 -126(5) . . 2_556 2_556 no
+O26 Al2 O4 Al1 54(5) . . 2_556 2_556 no
+O3 Al2 O19 C16 -13(9) . . 4_566 4_566 no
+O17 Al2 O19 C16 -105(9) . . 4_566 4_566 no
+O26 Al2 O19 C16 170(8) . . 4_566 4_566 no
+O16 Al3 O2 Al4 -130(5) . . . . no
+O37 Al3 O2 Al4 -52(5) . . . . no
+O18 Al3 O2 Al4 129(5) 4_566 . . . no
+O46 Al3 O2 Al4 52(6) 4_566 . . . no
+O16 Al3 O3 Al2 -34(7) . . . . no
+O37 Al3 O3 Al2 -111(6) . . . . no
+O18 Al3 O3 Al2 67(6) 4_566 . . . no
+O46 Al3 O3 Al2 145(6) 4_566 . . . no
+O2 Al3 O16 C15 176(12) . . . . no
+O3 Al3 O16 C15 -7(13) . . . . no
+O37 Al3 O16 C15 92(12) . . . . no
+O18 Al3 O16 C15 -93(12) 4_566 . . . no
+O2 Al3 O37 C35 47(11) . . . . no
+O3 Al3 O37 C35 -136(11) . . . . no
+O16 Al3 O37 C35 138(11) . . . . no
+O46 Al3 O37 C35 -41(12) 4_566 . . . no
+O2 Al3 O18 C16 126(7) . . 4_566 4_566 no
+O3 Al3 O18 C16 -52(7) . . 4_566 4_566 no
+O16 Al3 O18 C16 35(8) . . 4_566 4_566 no
+O2 Al3 O46 C45 -46(9) . . 4_566 4_566 no
+O3 Al3 O46 C45 136(8) . . 4_566 4_566 no
+O37 Al3 O46 C45 37(9) . . 4_566 4_566 no
+O36 Al4 O1 Al4 123(3) . . . 3_665 no
+O36 Al4 O2 Al3 49(5) . . . . no
+O28 Al4 O2 Al3 145(5) 2_546 . . . no
+O29 Al4 O2 Al3 -138(5) 4_566 . . . no
+O47 Al4 O2 Al3 -37(6) 4_566 . . . no
+O1 Al4 O36 C35 167(6) . . . . no
+O2 Al4 O36 C35 -15(7) . . . . no
+O28 Al4 O36 C35 -99(6) 2_546 . . . no
+O47 Al4 O36 C35 78(6) 4_566 . . . no
+O2 Al4 O28 C26 -155(10) . . 2_546 2_546 no
+O36 Al4 O28 C26 -59(10) . . 2_546 2_546 no
+O2 Al4 O29 C26 -130(6) . . 4_566 4_566 no
+O2 Al4 O47 C45 -1(9) . . 4_566 4_566 no
+O36 Al4 O47 C45 -99(8) . . 4_566 4_566 no
+Al3 O16 C15 O17 22(15) . . . . no
+Al3 O16 C15 C11 -159(10) . . . . no
+Al2 O17 C15 O16 6(10) . . . . no
+Al2 O17 C15 C11 -173(5) . . . . no
+Al3 O18 C16 O19 19(10) 4_466 . . . no
+Al3 O18 C16 C14 -161(5) 4_466 . . . no
+Al2 O19 C16 O18 26(12) 4_466 . . . no
+Al2 O19 C16 C14 -153(7) 4_466 . . . no
+Al2 O26 C25 O27 17(11) . . . . no
+Al2 O26 C25 C21 -162(6) . . . . no
+Al1 O27 C25 O26 16(11) 2_556 . . . no
+Al1 O27 C25 C21 -164(6) 2_556 . . . no
+Al4 O28 C26 O29 -30(13) 2_556 . . . no
+Al4 O28 C26 C24 150(8) 2_556 . . . no
+Al4 O29 C26 O28 -14(9) 4_466 . . . no
+Al4 O29 C26 C24 166(4) 4_466 . . . no
+Al4 O36 C35 O37 1(9) . . . . no
+Al4 O36 C35 C31 -179(4) . . . . no
+Al3 O37 C35 O36 -24(14) . . . . no
+Al3 O37 C35 C31 156(8) . . . . no
+Al1 O38 C36 O39 18(11) 3_566 . . . no
+Al1 O38 C36 C34 -163(5) 3_566 . . . no
+Al1 O39 C36 O38 14(9) 1_556 . . . no
+Al1 O39 C36 C34 -166(4) 1_556 . . . no
+Al3 O46 C45 O47 21(12) 4_466 . . . no
+Al3 O46 C45 C41 -159(6) 4_466 . . . no
+Al4 O47 C45 O46 12(12) 4_466 . . . no
+Al4 O47 C45 C41 -168(6) 4_466 . . . no
+Al1 O48 C46 O49 15(10) 2_555 . . . no
+Al1 O48 C46 C44 -166(5) 2_555 . . . no
+Al2 O49 C46 O48 50(12) 1_554 . . . no
+Al2 O49 C46 C44 -130(7) 1_554 . . . no
+S11 C11 C12 C13 0(6) . . . . no
+C15 C11 C12 C13 180(5) . . . . no
+S11 C11 C15 O16 -154(5) . . . . no
+S11 C11 C15 O17 24(7) . . . . no
+C12 C11 C15 O16 26(8) . . . . no
+C12 C11 C15 O17 -156(6) . . . . no
+C11 C12 C13 C14 0(7) . . . . no
+C12 C13 C14 S11 0(6) . . . . no
+C12 C13 C14 C16 -180(5) . . . . no
+S11 C14 C16 O18 24(7) . . . . no
+S11 C14 C16 O19 -157(5) . . . . no
+C13 C14 C16 O18 -157(6) . . . . no
+C13 C14 C16 O19 23(9) . . . . no
+S21 C21 C22 C23 0(6) . . . . no
+C25 C21 C22 C23 180(5) . . . . no
+S21 C21 C25 O26 21(7) . . . . no
+S21 C21 C25 O27 -159(5) . . . . no
+C22 C21 C25 O26 -159(6) . . . . no
+C22 C21 C25 O27 21(9) . . . . no
+C21 C22 C23 C24 0(7) . . . . no
+C22 C23 C24 S21 0(6) . . . . no
+C22 C23 C24 C26 180(5) . . . . no
+S21 C24 C26 O28 168(5) . . . . no
+S21 C24 C26 O29 -12(7) . . . . no
+C23 C24 C26 O28 -12(9) . . . . no
+C23 C24 C26 O29 168(6) . . . . no
+S31 C31 C32 C33 0(6) . . . . no
+C35 C31 C32 C33 -180(4) . . . . no
+S31 C31 C35 O36 1(6) . . . . no
+S31 C31 C35 O37 -179(5) . . . . no
+C32 C31 C35 O36 -179(5) . . . . no
+C32 C31 C35 O37 1(8) . . . . no
+C31 C32 C33 C34 -1(6) . . . . no
+C32 C33 C34 S31 1(6) . . . . no
+C32 C33 C34 C36 180(4) . . . . no
+S31 C34 C36 O38 -154(5) . . . . no
+S31 C34 C36 O39 26(6) . . . . no
+C33 C34 C36 O38 28(8) . . . . no
+C33 C34 C36 O39 -153(5) . . . . no
+S41 C41 C42 C43 -1(6) . . . . no
+C45 C41 C42 C43 -180(5) . . . . no
+S41 C41 C45 O46 -157(6) . . . . no
+S41 C41 C45 O47 23(7) . . . . no
+C42 C41 C45 O46 22(9) . . . . no
+C42 C41 C45 O47 -158(6) . . . . no
+C41 C42 C43 C44 1(7) . . . . no
+C42 C43 C44 S41 0(6) . . . . no
+C42 C43 C44 C46 179(5) . . . . no
+S41 C44 C46 O48 38(7) . . . . no
+S41 C44 C46 O49 -143(6) . . . . no
+C43 C44 C46 O48 -142(7) . . . . no
+C43 C44 C46 O49 38(9) . . . . no
+
+# start Validation Reply Form
+_vrf_PLAT340_CAU-23              
+;
+PROBLEM:  Low Bond Precision on  C-C Bonds ...............       0.06 Ang.  
+RESPONSE: Data were collected to 1.2A resolution as no fluctuations in intensity were observed at higher angles
+;
+_vrf_PLAT306_CAU-23              
+;
+PROBLEM:  Isolated Oxygen Atom (H-atoms Missing ?) ....... Ow1 Check
+RESPONSE: hydrogen atoms were omitted in the refinement 
+;
+# end Validation Reply Form
+
+
+_chemical_name_systematic        CAU-23

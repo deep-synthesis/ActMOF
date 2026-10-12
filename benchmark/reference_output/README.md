@@ -1,3 +1,16 @@
 # reference_output
 
-`all_methods_PERRUN_curves_UNIFIED.csv` is the actual, already-published result of running everything in `../families/` together with `../merge_outputs.py`, comprising thirty-nine methods across five runs and fifty iterations, 9,750 rows in all, with columns `method`, `family`, `run`, `iteration`, and `best_q`. It is shipped here as a **verified reference**, not as something requiring regeneration, for three reasons. It is (i) what `../../plotting/curve_best_q_UNIFIED.py` and `../../plotting/fig3.py`, via the further aggregation into `figuredata_curve_best_q_UNIFIED.csv`, actually plot, allowing one to proceed straight to plotting without first running the benchmark, which costs real API money for five of the thirty-nine methods and requires R for four of them; (ii) the baseline against which `merge_outputs.py`'s own logic was checked before this repository was finalized, every one of the ten non-`core29` methods' per-run, per-iteration `best_q` matching this file exactly, the maximum absolute difference being zero; and (iii) a point of comparison for anyone rerunning the benchmark, in which case a fresh `../../outputs/all_methods_PERRUN_curves_UNIFIED.csv` may be diffed against this file. The two should match closely for the non-LLM, non-R methods, deterministic given the same seed and library versions, whereas the five LLM-touching methods can differ run to run even with `seed` fixed, since `temperature` and `reasoning_effort` behavior, along with the underlying model snapshot, are only as stable as OpenAI keeps them (see `../README.md`'s reproducibility section and `../../docs/` for what is already known to vary, and by how much).
+Results of the runs reported in the paper, so that figures and tables can be checked without rerunning the benchmark.
+All files are cut at iteration 39 (120 experiments = 3 starting experiments + 39 iterations x 3).
+
+| File | Content |
+|---|---|
+| `all_methods_PERRUN_curves_UNIFIED.csv` | best-so-far `best_q` of all 39 methods, 5 runs each, iterations 0-39 (7,800 rows; columns `method`, `family`, `run`, `iteration`, `best_q`) |
+| `leading_strategies_n20_PERRUN_curves.csv` | the same for the six leading strategies and random search with 20 runs each (5,600 rows) |
+| `logs/core29_selected_conditions.jsonl` | every condition selected by the 29 methods of `families/core29_gp_ml_tree_rl_mof.py`, with its `q_final` |
+| `logs/lagp_history.jsonl` | batches selected by the two laGP methods |
+| `logs/llm_pure_gpt4o_gpt55_history.jsonl`, `logs/llm_pure_gpt5mini_history.jsonl` | one line per LLM iteration: accepted conditions with the model's rationales, strategy summary, every attempt with its error, whether the random fallback was used, best-so-far, cost |
+| `logs/hybrid_gp_llm_history.jsonl` | one line per iteration of the two GP-LLM hybrids: who chose the batch (GP or LLM) and the best-so-far |
+
+The user message of every LLM request is a deterministic function of the history of the run, so the requests can be
+rebuilt from these logs, and the best-so-far curves can be recomputed from the logged conditions without calling the API.

@@ -1,36 +1,13 @@
-"""
-================================================================================
-Rerun of RGASP_Matern52_EI_nugget and BNN_like_MLPensemble_EI with the
-acquisition candidate pool equalized to 15,000 (was 4,000, the "_SLOW" value
-applied to methods flagged "slow" in the original registry)
-================================================================================
+"""rgasp_bnn.py -- two strategies: RGASP_Matern52_EI_nugget and BNN_like_MLPensemble_EI.
 
-Unlike the laGP fix, there is no crash/bug being corrected here - both
-methods already ran successfully in the original benchmark. The only change
-is ACQ_CANDIDATES_PER_ITER: 4000 -> 15000, matching what the other ~33
-non-"slow" methods already get. Real 100% local, no API calls at all.
+RGASP_Matern52_EI_nugget uses the RobustGaSP package of R (Matern-5/2 kernel, estimated nugget) through rpy2;
+BNN_like_MLPensemble_EI uses an ensemble of eight small MLPs fitted to bootstrap samples, whose spread serves as
+uncertainty. Both use EI on 15,000 candidates per iteration.
+Protocol as in core29_gp_ml_tree_rl_mof.py: 5 runs, 3 starting experiments + 39 iterations of 3 experiments.
 
-Rationale (quantified previously): with a candidate pool this sparse (only
-~0.1% of points exceed q=100,352), a random sample of 4,000 candidates vs
-15,000 has a meaningfully different (Poisson-approx) chance of including a
-genuinely excellent point each iteration (~4% vs ~14% for the top-0.1% tier),
-and denser candidate sampling gives finer resolution when hill-climbing the
-acquisition surface. This is a real, if modest, confound - not on the same
-severity level as the laGP argument-name bug.
-
-Both surrogates reused verbatim from Benchmark v3.ipynb:
-  - RRobustGaSPSurrogate: R RobustGaSP::rgasp(nugget.est=TRUE,
-    kernel_type="matern_5_2", max_eval=60), predict via predict(model, Xnew)
-  - MLPSurrogateBNNLike: ensemble of 8 bootstrapped sklearn MLPRegressors
-    (hidden_layer_sizes=(32,16)), mean/std across the ensemble as mu/sd
-
-Both use EI acquisition (matches the original registry: acq="ei" for both).
-
-Protocol: full budget (150 experiments, 49 iterations after the initial 3),
-5 runs, same seed formula as Benchmark v3.ipynb - this replaces the official
-final_summary rows for these 2 methods, so it uses the full protocol (not
-the 40/41-iteration Fig3 window used for some of the earlier diagnostics).
-================================================================================
+Requires R with the RobustGaSP package and rpy2. The R start-up below is written for Windows; set ACTMOF_R_HOME to the
+folder of the R installation. ACTMOF_POOL_DIR and ACTMOF_OUTPUT_DIR as in the other scripts.
+Set SMOKE_TEST = True for a short trial run.
 """
 
 from __future__ import annotations
@@ -50,12 +27,9 @@ from scipy.stats import norm
 from sklearn.neural_network import MLPRegressor
 
 # ==============================================================================
-# 0. R / rpy2 bootstrap (identical to lagp_rerun.py's proven-working setup)
+# 0. R / rpy2 bootstrap
 # ==============================================================================
 
-# Portability note: R_HOME is overridable via ACTMOF_R_HOME. Everything else
-# in this R-bootstrap block is unchanged from the original
-# rgasp_bnn_pool_fix_rerun.py.
 R_HOME = Path(os.environ.get("ACTMOF_R_HOME", r"C:\Program Files\R\R-4.6.1"))
 R_LIBS_USER = Path.home() / "R" / "win-library" / "4.6"
 os.environ["R_HOME"] = str(R_HOME)
@@ -118,7 +92,7 @@ class RGASPSurrogate:
 
 
 # ==============================================================================
-# 1. BNN-like surrogate (pure sklearn, identical to Benchmark v3.ipynb)
+# 1. BNN-like surrogate
 # ==============================================================================
 
 MIN_STD = 1e-9
@@ -153,10 +127,10 @@ class MLPSurrogateBNNLike:
 # ==============================================================================
 
 RANDOM_STATE = 42
-BUDGET_TOTAL_EXPERIMENTS = 150
+BUDGET_TOTAL_EXPERIMENTS = 120
 INITIAL_EXPERIMENTS = 3
 BATCH_SIZE = 3
-N_ITERATIONS = (BUDGET_TOTAL_EXPERIMENTS - INITIAL_EXPERIMENTS) // BATCH_SIZE  # 49
+N_ITERATIONS = (BUDGET_TOTAL_EXPERIMENTS - INITIAL_EXPERIMENTS) // BATCH_SIZE  # 39 iterations: 120 experiments = 3 starting experiments + 39 x 3
 N_RUNS = 5
 ACQ_CANDIDATES_PER_ITER = 15_000   # equalized - was 4_000 for these two methods
 DIVERSITY_LAMBDA = 0.03
@@ -167,9 +141,6 @@ METHODS = [
     {"name": "BNN_like_MLPensemble_EI", "surrogate": "bnn_like", "n_models": 8},
 ]
 
-# Portability note (only change vs original rgasp_bnn_pool_fix_rerun.py):
-# POOL_DIR/OUTPUT_DIR now default to ../../data and ../../outputs inside this
-# repo, overridable via ACTMOF_POOL_DIR / ACTMOF_OUTPUT_DIR.
 _REPO_ROOT = Path(__file__).resolve().parents[2]
 POOL_DIR = Path(os.environ.get("ACTMOF_POOL_DIR", str(_REPO_ROOT / "data")))
 POOL_GLOB = "design_grid_part*.csv"
@@ -198,13 +169,7 @@ def make_surrogate(spec: Dict[str, Any], seed: int):
 
 
 class ConstantSurrogate:
-    """Matches Benchmark v3.ipynb's fallback: when the training targets have
-    ~zero variance (very common at early iterations, since ~94% of the pool
-    has q_final=0), skip real model fitting - RobustGaSP's marginal-
-    likelihood optimizer errors out on a degenerate (zero-variance) response
-    (confirmed by direct repro: "Expecting a single value: [extent=0]"),
-    and a constant model is the only sensible fit anyway when every observed
-    point has the same value."""
+    """when the training targets have ~zero variance (very common at early iterations, since ~94% of the pool has q_final=0), skip real model fitting - RobustGaSP's marginal- likelihood optimizer errors out on a degenerate (zero-variance) response (confirmed by direct repro: "Expecting a single value: [extent=0]"), and a constant model is the only sensible fit anyway when every observed point has the same value."""
     def fit(self, X: np.ndarray, y: np.ndarray):
         self.value = float(np.mean(y)) if len(y) else 0.0
         return self

@@ -1,37 +1,13 @@
 # ============================================
-# build_design_grid.py -- ActMOF virtual sandbox construction
+# build_design_grid.py -- construction of the ActMOF landscape
 # ============================================
-# Provenance: copied verbatim (algorithm untouched) from the first code cell
-# of `construct dataset with time tracker.ipynb` (the project's original
-# dataset-construction notebook). Only the output-path handling near the
-# bottom (OUTPUT_DIR / write_chunk) was made configurable for portability;
-# no numerical logic, model, or rule was changed.
-#
-# What this does, in one paragraph: fits two RandomForestRegressor models
-# (rf_int -> Intensity_exp, rf_fwhm -> FWHM_exp) on the 95 unique real
-# microwave-synthesis experiments hardcoded below (X / max_intensity / FWHM
-# arrays; 96 raw measurements collapse to 95 unique conditions after
-# grouping, see the "2) Experimental dataset" comment below), then walks
-# the full 5-variable grid implied by BOUNDS
-# (6,101,172 conditions) and, for every non-experimental point, predicts
-# Intensity/FWHM with those two RFs and blends the prediction with nearby
-# real experiments (Rule 1: neighbors within Chebyshev distance 1 -> 80%
-# experimental average + 20% RF; Rule 2: distance-2 neighbors -> 50/50),
-# then applies the failure-value rules (Intensity<3000 -> q=0, FWHM>3 -> 30)
-# to get q_final = Intensity_final / FWHM_final for every row. Output is the
-# design_grid_part*.csv series consumed by every script under ../benchmark/.
-#
-# Runtime: this streams and predicts over ~6.1M rows -- expect it to take
-# from tens of minutes to a few hours depending on BATCH_ROWS/CPU. There is
-# no way to shrink this without changing FULL_GRID/BOUNDS, which would
-# change the resulting dataset, not just how fast you get it.
-# ============================================
-# Fast full-grid generator with vectorized rules, batching, progress + ETA
-# - Rule 1: all five params within 1 step -> 80% EXP + 20% RF
-# - Rule 2: all diffs ≤ 2 and exactly 1 or 2 dims at distance 2, others ≤ 1 -> 50% EXP + 50% RF
-# - Overwrites and rounding preserved
-# - Streams to CSV or XLSX in parts
-# ============================================
+# Fits two RandomForestRegressor models (intensity and FWHM) to the 95 unique measured MOF-321 syntheses given below
+# (96 recorded entries; two are the same experiment), then goes through the full grid of the five variables
+# (6,101,172 conditions). For every condition that was not measured, intensity and FWHM are predicted by the forests
+# and blended with nearby measured conditions (Rule 1: neighbors within Chebyshev distance 1 -> 80% measured mean +
+# 20% forest; Rule 2: neighbors at distance 2 -> 50/50), and the thresholds are applied (intensity < 3000 -> q = 0;
+# FWHM > 3 -> q = 0, FWHM set to 30). q_final = round(intensity / FWHM).
+# Output: design_grid_part*.csv in OUTPUT_DIR. All random states are fixed (42).
 
 import os
 import time
@@ -71,11 +47,6 @@ CSV_ROWS_PER_FILE = 1_000_000
 XLSX_ROWS_PER_FILE = 1_000_000  # Excel max 1,048,576
 OUTPUT_BASENAME = "design_grid_part"
 
-# Where the design_grid_part*.csv files are written. Defaults to the `data/`
-# folder that ships alongside this repo (ActMOF_Code/data/), so the benchmark
-# scripts in ../benchmark/families/ find the output with zero configuration.
-# Override with the ACTMOF_DATA_DIR environment variable if you want it
-# elsewhere.
 OUTPUT_DIR = Path(os.environ.get("ACTMOF_DATA_DIR", str(Path(__file__).resolve().parent.parent / "data")))
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 

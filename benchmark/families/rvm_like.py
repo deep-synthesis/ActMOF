@@ -1,40 +1,11 @@
-"""
-================================================================================
-Full 5-run rerun of RVM_like_ARD_RFF_EI
+"""rvm_like.py -- one strategy: RVM_like_ARD_RFF_EI.
 
-Root cause of the rerun: in the real executed benchmark, run=3 of this method
-hit a PermissionError while write_checkpoint() tried to write
-'bo_benchmark_outputs\\bo_benchmark_errors.csv' (most likely a transient
-OneDrive file lock on the synced output directory - not a code or algorithm
-bug). The outer per-method-run try/except caught it, logged
-"[SKIP] Method-run failed and was skipped: RVM_like_ARD_RFF_EI run=3", and
-moved on - but that run had already reached iteration 39/49 (120/150
-experiments) at that point, and its partial best_q (85,081) was folded into
-final_summary.csv's 5-run mean with no disclosure that it never finished.
+The surrogate is an ARD regression (sklearn ARDRegression) on 256 random Fourier features of the five scaled
+variables; EI is computed from its predictive mean and standard deviation on 15,000 candidates per iteration.
+Protocol as in core29_gp_ml_tree_rl_mof.py: 5 runs, 3 starting experiments + 39 iterations of 3 experiments.
+Before the runs, a short timing test estimates the duration of the full run.
 
-Original 5 final values: [34396, 39102, 123796, 85081@iter39(truncated), 88560]
-  -> reported mean 74,187 (includes the truncated run)
-  -> mean excluding the truncated run: 71,464 (~3.9% difference - real but
-     not conclusion-changing; this method ranks near the bottom of all 39)
-
-Per the user's decision: rerun all 5 arms from scratch (not just run=3) for
-internal consistency (same code path exercised uniformly), following the
-established smoke-test -> canary-test -> full-run discipline.
-
-Surrogate (RVMLikeSurrogate) reused verbatim from Benchmark v3.ipynb:
-  RBF random features (RBFSampler, gamma via median-heuristic
-  estimate_rbf_gamma) + ARDRegression (sparse Bayesian learning shrinks
-  irrelevant basis functions). n_components=256, acq="ei". Not flagged
-  "slow" in the original registry -> uses the standard 15,000-candidate
-  pool (same as ~33 other non-"slow" methods, no pool-size confound here).
-
-Pure Python/sklearn, no R, no API calls - cheapest of all the reruns this
-session, should complete in minutes.
-
-Protocol: full budget (150 experiments, 49 iterations after the initial 3),
-5 runs, same seed formula as Benchmark v3.ipynb:
-  seed = (RANDOM_STATE + 10_000*run + stable_int(method_name)) % (2**31-1)
-================================================================================
+ACTMOF_POOL_DIR and ACTMOF_OUTPUT_DIR as in the other scripts.
 """
 
 from __future__ import annotations
@@ -55,14 +26,13 @@ from sklearn.kernel_approximation import RBFSampler
 from sklearn.linear_model import ARDRegression
 
 # ==============================================================================
-# 1. RVM-like surrogate (pure sklearn, identical to Benchmark v3.ipynb)
+# 1. RVM-like surrogate
 # ==============================================================================
 
 MIN_STD = 1e-9
 
 
 def estimate_rbf_gamma(X: np.ndarray) -> float:
-    """Verbatim from Benchmark v3.ipynb - median-heuristic RBF bandwidth."""
     if X.shape[0] < 2:
         return 1.0
     sample = X
@@ -78,9 +48,7 @@ def estimate_rbf_gamma(X: np.ndarray) -> float:
 
 
 class RVMLikeSurrogate:
-    """RVM-inspired model: RBF random features + ARDRegression.
-    ARD shrinks irrelevant basis functions, similar in spirit to sparse
-    Bayesian learning. Verbatim from Benchmark v3.ipynb."""
+    """RVM-inspired model: RBF random features + ARDRegression. ARD shrinks irrelevant basis functions, similar in spirit to sparse Bayesian learning."""
 
     def __init__(self, random_state: int = 0, n_components: int = 256):
         self.random_state = random_state
@@ -105,9 +73,7 @@ class RVMLikeSurrogate:
 
 
 class ConstantSurrogate:
-    """Matches Benchmark v3.ipynb's fallback: when training targets have
-    ~zero variance (common at early iterations, ~94% of the pool has
-    q_final=0), skip real model fitting and predict the constant mean."""
+    """when training targets have ~zero variance (common at early iterations, ~94% of the pool has q_final=0), skip real model fitting and predict the constant mean."""
 
     def fit(self, X: np.ndarray, y: np.ndarray):
         self.value = float(np.mean(y)) if len(y) else 0.0
@@ -123,10 +89,10 @@ class ConstantSurrogate:
 # ==============================================================================
 
 RANDOM_STATE = 42
-BUDGET_TOTAL_EXPERIMENTS = 150
+BUDGET_TOTAL_EXPERIMENTS = 120
 INITIAL_EXPERIMENTS = 3
 BATCH_SIZE = 3
-N_ITERATIONS = (BUDGET_TOTAL_EXPERIMENTS - INITIAL_EXPERIMENTS) // BATCH_SIZE  # 49
+N_ITERATIONS = (BUDGET_TOTAL_EXPERIMENTS - INITIAL_EXPERIMENTS) // BATCH_SIZE  # 39 iterations: 120 experiments = 3 starting experiments + 39 x 3
 N_RUNS = 5
 ACQ_CANDIDATES_PER_ITER = 15_000  # not flagged "slow" in the original registry
 DIVERSITY_LAMBDA = 0.03
@@ -134,9 +100,6 @@ USE_LOG1P_TARGET = True
 
 METHOD_SPEC = {"name": "RVM_like_ARD_RFF_EI", "surrogate": "rvm_like", "n_components": 256}
 
-# Portability note (only change vs original rvm_like_rerun.py): POOL_DIR/
-# OUTPUT_DIR now default to ../../data and ../../outputs inside this repo,
-# overridable via ACTMOF_POOL_DIR / ACTMOF_OUTPUT_DIR.
 _REPO_ROOT = Path(__file__).resolve().parents[2]
 POOL_DIR = Path(os.environ.get("ACTMOF_POOL_DIR", str(_REPO_ROOT / "data")))
 POOL_GLOB = "design_grid_part*.csv"

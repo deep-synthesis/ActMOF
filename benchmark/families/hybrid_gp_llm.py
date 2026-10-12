@@ -1,32 +1,17 @@
-"""
-================================================================================
-Seed-fixed rerun of the two HYBRID_GP_Matern52_{EI,PI}_ALT_gpt-5.5 methods
-================================================================================
+"""hybrid_gp_llm.py -- the two GP-LLM hybrids: HYBRID_GP_Matern52_EI_ALT_gpt-5.5 and HYBRID_GP_Matern52_PI_ALT_gpt-5.5.
 
-These are the paper's headline result (#1 ranked method, best_q=215,832 for
-the PI variant). Odd iterations use a plain sklearn GP (Matern5/2 kernel,
-n_restarts=1) with EI or PI acquisition over 15,000 randomly-sampled
-candidates; even iterations use gpt-5.5 with the same 45-experiment history
-window as the rest of the benchmark. Matches Benchmark v3.ipynb's
-"hybrid_alternating" logic exactly (iteration % 2 == 0 -> LLM, else -> GP).
+Odd iterations: a Matern-5/2 GP fitted to all experiments of the run picks three conditions from 15,000 candidates
+with EI or PI, as in core29_gp_ml_tree_rl_mof.py. Even iterations: gpt-5.5 receives the 45 most recent experiments of
+the same history (including those chosen by the GP) and returns three conditions, with the messages, checks, retries
+and random fallback of llm_pure_gpt4o_gpt55.py. Both append to one shared history.
 
-Fixes applied (same two real, fixable bugs as gpt5mini_seed_rerun.py):
-  - seed is now passed to every gpt-5.5 call (confirmed accepted)
-  - reasoning_effort="minimal" is set explicitly (gpt-5.5 defaults to
-    "medium" and otherwise silently burns the whole token budget - the same
-    failure mode DeepSeek and the unfixed gpt-5.6-luna/gpt-5-mini calls hit)
-  - temperature is NOT attempted - gpt-5.5 rejects it server-side (confirmed
-    by verify_original_models.py), a hard API constraint, not something this
-    script can control. Disclosed rather than silently worked around.
+gpt-5.5 is called with reasoning_effort "none" and a fixed seed (seed of the run + iteration); one test call before
+the runs stops the script if the API has dropped these settings. hybrid_history.jsonl records, for every iteration,
+who chose the batch and the best-so-far.
+Protocol: 5 runs, 3 starting experiments + 39 iterations of 3 experiments.
 
-The GP half of each iteration is already fully deterministic given a seed
-(scikit-learn, no API involved) - only the LLM half benefits from seed/
-reasoning_effort control.
-
-Protocol: window=45, BUDGET_TOTAL_EXPERIMENTS=150 (49 iterations after the
-initial 3), 5 runs, same seed formula as Benchmark v3.ipynb
-(RANDOM_STATE + 10_000*run + stable_int(method)).
-================================================================================
+Requires the OpenAI API key in the environment variable OPENAI_API_KEY; the calls are billed.
+ACTMOF_POOL_DIR and ACTMOF_OUTPUT_DIR as in the other scripts. Set SMOKE_TEST = True for a short trial run.
 """
 
 from __future__ import annotations
@@ -53,19 +38,8 @@ from sklearn.gaussian_process.kernels import ConstantKernel as C
 # ==============================================================================
 
 OPENAI_API_KEY_ENV_VAR = "OPENAI_API_KEY"
-OPENAI_API_KEY_FALLBACK = "PASTE_YOUR_OPENAI_API_KEY_HERE"
 
-# Observed 2026-09-08: CONFIRMED via a real API call (response.model read
-# back directly) to resolve to gpt-5.5-2026-04-23. Used as-is below, not
-# pinned to this dated snapshot -- see ../README.md's "Resolved model
-# snapshots" section.
 OPENAI_MODEL = "gpt-5.5"
-# gpt-5.5's reasoning_effort vocabulary is {none, low, medium, high, xhigh} -
-# NOT {minimal, low, medium, high} like gpt-5-mini/gpt-5-nano (confirmed by
-# probing the live 400 error text). Using the wrong word would just get
-# silently dropped by the kwarg-unwind logic below, defaulting to "medium" -
-# exactly the failure mode this rerun exists to avoid - so get it right here
-# instead of relying on that fallback.
 REASONING_EFFORT = "none"
 TRY_TEMPERATURE = False   # gpt-5.5 rejects temperature server-side (confirmed)
 LOW_TEMPERATURE = 0.2
@@ -74,14 +48,12 @@ WINDOW = 45
 RANDOM_STATE = 42
 INITIAL_EXPERIMENTS = 3
 BATCH_SIZE = 3
-BUDGET_TOTAL_EXPERIMENTS = 150
-N_ITERATIONS = (BUDGET_TOTAL_EXPERIMENTS - INITIAL_EXPERIMENTS) // BATCH_SIZE  # 49
+BUDGET_TOTAL_EXPERIMENTS = 120
+N_ITERATIONS = (BUDGET_TOTAL_EXPERIMENTS - INITIAL_EXPERIMENTS) // BATCH_SIZE  # 39 iterations: 120 experiments = 3 starting experiments + 39 x 3
 N_RUNS = 5
 LLM_MAX_REPAIR_ATTEMPTS = 3
 
 ACQ_CANDIDATES_PER_ITER = 15_000   # GP half uses the FAST candidate pool size,
-                                     # not the *_SLOW=4000 one - matches the
-                                     # original notebook's hybrid branch exactly.
 DIVERSITY_LAMBDA = 0.03
 MIN_STD = 1e-9
 USE_LOG1P_TARGET = True
@@ -94,10 +66,6 @@ VARIANTS = [
 
 SMOKE_TEST = False   # 1 variant x 1 run x 3 iterations first
 
-# Portability note (only change vs original hybrid_seed_rerun.py): POOL_DIR/
-# OUTPUT_DIR now default to ../../data and ../../outputs inside this repo,
-# overridable via ACTMOF_POOL_DIR / ACTMOF_OUTPUT_DIR. No GP, prompt, seed,
-# or acquisition logic below was touched.
 _REPO_ROOT = Path(__file__).resolve().parents[2]
 POOL_DIR = Path(os.environ.get("ACTMOF_POOL_DIR", str(_REPO_ROOT / "data")))
 POOL_GLOB = "design_grid_part*.csv"
@@ -173,7 +141,7 @@ def sample_untried_candidates(rng: np.random.Generator, tried: set, n: int) -> L
 
 
 # ==============================================================================
-# 2. GP half (identical to Benchmark v3.ipynb's SklearnGPSurrogate, matern52)
+# 2. GP half
 # ==============================================================================
 
 def y_to_model_scale(y: np.ndarray) -> np.ndarray:
@@ -246,7 +214,7 @@ def gp_select_batch(history_conditions: List[Dict[str, int]], history_y_raw: Lis
 
 
 # ==============================================================================
-# 3. LLM half (identical machinery to gpt5mini_seed_rerun.py)
+# 3. LLM half
 # ==============================================================================
 
 class MOFConditionChoice(BaseModel):
@@ -322,9 +290,7 @@ def get_openai_client():
     from openai import OpenAI
 
     key = os.environ.get(OPENAI_API_KEY_ENV_VAR, "").strip()
-    if not key or key == "PASTE_YOUR_OPENAI_API_KEY_HERE":
-        key = OPENAI_API_KEY_FALLBACK.strip()
-    if not key or key == "PASTE_YOUR_OPENAI_API_KEY_HERE":
+    if not key:
         raise RuntimeError(f"No OpenAI API key found. Set {OPENAI_API_KEY_ENV_VAR}.")
     return OpenAI(api_key=key)
 
@@ -468,7 +434,7 @@ def run_canary_check(client) -> None:
     if "reasoning_effort" in _WARNED_DROPPED_KWARGS:
         raise RuntimeError(f"[CANARY FAILED] reasoning_effort={REASONING_EFFORT!r} was rejected and silently "
                             f"dropped - the model would fall back to its default effort (likely 'medium'), "
-                            f"risking the same empty-content failure mode this rerun exists to avoid. "
+                            f"which can return empty answers. "
                             f"Check the current valid reasoning_effort values for {OPENAI_MODEL}.")
     print(f"[canary] OK - reasoning_tokens={reasoning_tok}, seed accepted={'seed' not in _WARNED_DROPPED_KWARGS}")
     print(f"[canary] sample conditions: {conditions}")

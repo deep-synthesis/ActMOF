@@ -13,9 +13,9 @@ outputs/*
 outputs/*/*
 !outputs/*/.gitkeep
 
-# Generated figures
-plotting/*.png
-plotting/*.svg
+# caches written by the analysis scripts
+analyses/*/_oracle.npy
+analyses/landscape_robustness/maps/
 
 __pycache__/
 *.pyc

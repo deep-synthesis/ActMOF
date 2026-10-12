@@ -1,28 +1,12 @@
-"""
-merge_outputs.py -- stitch all 7 family scripts' per-run outputs (1 covering
-29 methods, the other 6 covering 10 methods between them) into the one CSV
-the plotting code and paper figures read: all_methods_PERRUN_curves_UNIFIED.csv
+"""merge_outputs.py -- combine the outputs of the 7 family scripts into all_methods_PERRUN_curves_UNIFIED.csv
 (columns: method, family, run, iteration, best_q).
 
-This is NEW glue code written for this repo -- it does not reimplement any
-method. It only concatenates each family script's already-final
-*_iteration_metrics.csv (each already contains the correct cumulative best_q
-per run/iteration -- no metric is recomputed here) and attaches a `family`
-label. The concatenation logic and the method-family map below were verified,
-row for row, against the original all_methods_PERRUN_curves_UNIFIED.csv this
-project already published (see docs/ for how that dataset was produced) --
-every one of the 10 non-core methods' rows matched exactly (max abs diff in
-best_q: 0.0) before this script was written.
+Each family script writes its own *_iteration_metrics.csv with the best-so-far q of every run and iteration; this
+script concatenates them and adds the `family` label. Nothing is recomputed. A family whose output is missing is
+skipped with a warning, so a partial run can be merged.
 
-Usage:
     python merge_outputs.py
-    # or, to read/write somewhere other than the repo-relative defaults:
     python merge_outputs.py --outputs-dir /path/to/outputs --out /path/to/all_methods_PERRUN_curves_UNIFIED.csv
-
-Run this after some or all of the 7 scripts in families/ have produced their
-output (via run_all_methods.py or manually). Any family whose output file is
-missing is skipped with a warning, not a hard failure, so you can merge a
-partial run.
 """
 from __future__ import annotations
 

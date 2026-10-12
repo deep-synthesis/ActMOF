@@ -1,71 +1,24 @@
-"""
-================================================================================
-Unified BO rerun -- ONE candidate-sampling mechanism for all 39 methods
-================================================================================
-Purpose: this session found that the 10 methods already patched/rerun via
-dedicated one-off scripts (hybrid_seed_rerun.py, llm_pure_seed_rerun.py,
-gpt5mini_seed_rerun.py, lagp_rerun.py, rgasp_bnn_pool_fix_rerun.py,
-rvm_like_rerun.py) use a DIFFERENT candidate-sampling mechanism than the
-original Benchmark v3.ipynb: continuous rejection sampling over FEATURE_RANGES
-via `sample_untried_candidates()`, instead of the notebook's pool_df-index
-`rng.choice(n_pool, ...)` (which also consumes an extra VALIDATION_SIZE draw
-per method/run that the rerun scripts never replicate). Same seed formula,
-different RNG consumption pattern -> different exact trajectories even for
-methods that were never buggy.
+"""core29_gp_ml_tree_rl_mof.py -- 29 of the 39 search strategies of the ActMOF benchmark.
 
-Decision (per user, this conversation): anchor on the ALREADY-VALIDATED
-sampling mechanism used by those 10 rerun scripts (proven internally
-deterministic: same seed -> bit-identical result), and port the REMAINING 29
-methods onto that SAME mechanism, rather than trying to retrofit the 10
-rerun scripts to match the original notebook's pool_df mechanics. Result:
-all 39 methods, one consistent upstream candidate-sampling scheme.
+Gaussian processes (Matern-5/2, Matern-3/2, RBF and rational-quadratic kernels; EI, PI, UCB, Thompson sampling,
+quantile, CVaR and greedy acquisition), tree and other machine-learning surrogates (bootstrap and conformal random
+forests, ExtraTrees, quantile gradient boosting), approximate and linear models (random Fourier features, Nystroem,
+Bayesian linear model), bandits (LinUCB and chemistry-feature bandits) and random search. The other 10 strategies
+(laGP, RobustGaSP, MLP ensemble, ARD regression on random features, LLMs and GP-LLM hybrids) have their own scripts in
+this folder; they are listed in METHOD_SPECS only so that all 39 names appear in one place, and are skipped here.
 
-Where each piece came from:
-  - Candidate sampling (`sample_untried_candidates`, `greedy_diverse_batch`,
-    `gaussian_ei/pi/ucb/quantile/cvar_upper`, `acquisition_scores`, seed
-    formula, `y_to_model_scale`): copied from this session's own rerun
-    scripts (e.g. phased_hybrid_gp20_llm20_fullhist_rerun.py), which in turn
-    mirror Benchmark v3.ipynb's math exactly -- only the candidate-drawing
-    wrapper differs, not the acquisition math itself.
-  - Every surrogate model class (SklearnGPSurrogate, BootRFSurrogate,
-    ConformalRFSurrogate, RFFGPSurrogate, FITCGPLikeSurrogate, BLMSurrogate,
-    QuantileBoostingSurrogate, ExtraTreesBARTLikeSurrogate,
-    ContextualLinUCBSurrogate, MOFChemContextualBanditSurrogate): copied
-    VERBATIM from Benchmark v3.ipynb cell 8 -- these were never buggy, only
-    the candidate-sampling wrapper around them was inconsistent, so their
-    internal fit/predict logic is untouched.
-  - `estimate_rbf_gamma`: copied verbatim (used by RFFGP/FITCGP).
-  - RGASP/laGP/hetGP/GPyTorch/NGBoost surrogate kinds are DELIBERATELY
-    OMITTED from make_surrogate() here: RGASP and laGP are both already in
-    ALREADY_FIXED_METHODS (R-backed, already correctly rerun this session);
-    GPyTorch/NGBoost were never part of the actual 39-method roster in the
-    corrected dataset (confirmed: GPYTORCH_ExactGP_EI, SVIGP_GPyTorch_EI,
-    NGBOOST_EI do not appear in all_methods_PERRUN_curves_POSTFIX.csv --
-    packages were unavailable when the original notebook ran, so those
-    methods were silently skipped there too). No GPU, no extra pip installs
-    needed for this script.
+Protocol (the same in every script of this folder): 3 random starting experiments, then 39 iterations of 3 experiments
+(120 experiments per run); in every iteration 15,000 untried conditions are drawn at random, scored by the acquisition
+function, and a batch of three is chosen by score plus a small distance bonus. The seed of run r of method m is
+42 + 10,000 r + stable_int(m).
 
-================================================================================
-SKIP-LIST NOTICE -- READ BEFORE TREATING THIS AS THE REPRODUCTION ENTRY POINT
-================================================================================
-`ALREADY_FIXED_METHODS` below (10 methods) is a deliberate skip so this run
-does not re-spend money/compute on methods already correctly reproduced this
-session via their own dedicated rerun scripts. METHOD_SPECS below still lists
-all 39 (placeholders for the 10 skipped ones) so a reader sees the true full
-roster in one place. BEFORE SUBMISSION, to make this script the single true
-"run this and reproduce everything" entry point:
-  1. Delete the `if method in ALREADY_FIXED_METHODS: continue` line inside
-     `main()` (search for "DELETE-BEFORE-SUBMISSION").
-  2. Replace the 10 placeholder specs in METHOD_SPECS (marked
-     "already_fixed_placeholder") with real, runnable specs -- for the 5
-     LLM-touching ones (HYBRID x2, LLM_PURE x3) that means porting in the
-     OpenAI-calling logic from hybrid_seed_rerun.py / llm_pure_seed_rerun.py
-     / gpt5mini_seed_rerun.py; for RGASP/laGP that means porting in the
-     rpy2-backed RRobustGaSPSurrogate/RLaGPSurrogate classes (verbatim from
-     Benchmark v3.ipynb) plus the R environment setup from cell 0.
-  Until both steps are done, this script alone reproduces 29/39 methods; the
-  other 10 require their own already-existing scripts to be run separately.
-================================================================================
+Environment variables:
+    ACTMOF_POOL_DIR        folder with design_grid_part*.csv (default: ../../data)
+    ACTMOF_OUTPUT_DIR      output folder (default: ../../outputs/core29_gp_ml_tree_rl_mof)
+    ACTMOF_N_RUNS          number of runs per method (default 5; 20 for the n = 20 runs of the paper)
+    ACTMOF_RUN_IDX_START   first run index (default 0; to split the runs over several workers)
+
+Set SMOKE_TEST = True for a short trial run.
 """
 
 from __future__ import annotations
@@ -93,27 +46,22 @@ from sklearn.linear_model import BayesianRidge
 from sklearn.kernel_approximation import RBFSampler, Nystroem
 
 # ==============================================================================
-# 0. CONFIG -- identical constants to Benchmark v3.ipynb / this session's rerun scripts
+# 0. CONFIG
 # ==============================================================================
 
 RANDOM_STATE = 42
 INITIAL_EXPERIMENTS = 3
 BATCH_SIZE = 3
-BUDGET_TOTAL_EXPERIMENTS = 150
-N_ITERATIONS = (BUDGET_TOTAL_EXPERIMENTS - INITIAL_EXPERIMENTS) // BATCH_SIZE  # 49, full protocol
-N_RUNS = 5
+BUDGET_TOTAL_EXPERIMENTS = 120
+N_ITERATIONS = (BUDGET_TOTAL_EXPERIMENTS - INITIAL_EXPERIMENTS) // BATCH_SIZE  # 39 iterations: 120 experiments = 3 starting experiments + 39 x 3
+N_RUNS = int(os.environ.get("ACTMOF_N_RUNS", "5"))        # 5 runs per method; 20 for the n = 20 runs
+RUN_IDX_START = int(os.environ.get("ACTMOF_RUN_IDX_START", "0"))  # first run index (to split runs over workers)
 
 ACQ_CANDIDATES_PER_ITER = 15_000
 DIVERSITY_LAMBDA = 0.03
 MIN_STD = 1e-9
 USE_LOG1P_TARGET = True
 
-# Portability note: POOL_DIR/OUTPUT_DIR default to the `data/` and `outputs/`
-# folders that ship next to this repo (ActMOF_Code/data, ActMOF_Code/outputs);
-# override with the ACTMOF_POOL_DIR / ACTMOF_OUTPUT_DIR env vars if your
-# design_grid_part*.csv files live elsewhere. This is the only change made to
-# this file versus the original unified_bo_rerun.py -- no method/acquisition/
-# surrogate logic below this point was touched.
 _REPO_ROOT = Path(__file__).resolve().parents[2]
 POOL_DIR = Path(os.environ.get("ACTMOF_POOL_DIR", str(_REPO_ROOT / "data")))
 POOL_GLOB = "design_grid_part*.csv"
@@ -125,19 +73,15 @@ FEATURE_RANGES = {
 }
 OUTPUT_DIR = Path(os.environ.get("ACTMOF_OUTPUT_DIR", str(_REPO_ROOT / "outputs" / "core29_gp_ml_tree_rl_mof")))
 
-SMOKE_TEST = False  # smoke pass (3 methods + full-coverage 29-method check) verified 2026-08-21
+SMOKE_TEST = False
 
-# The 10 methods already correctly reproduced this session via their own
-# dedicated rerun scripts -- skipped here to avoid redundant spend. See the
-# SKIP-LIST NOTICE in the module docstring for how to remove this before
-# treating this script as the sole reproduction entry point.
-ALREADY_FIXED_METHODS = {
-    "RGASP_Matern52_EI_nugget",           # -> lagp/rgasp_bnn_pool_fix_rerun.py
-    "LAGP_ALC_EI", "LAGP_NN_EI",          # -> lagp_rerun.py
-    "RVM_like_ARD_RFF_EI",                # -> rvm_like_rerun.py
-    "BNN_like_MLPensemble_EI",            # -> rgasp_bnn_pool_fix_rerun.py
-    "LLM_PURE_gpt-4o", "LLM_PURE_gpt-5.5", "LLM_PURE_gpt-5-mini",  # -> llm_pure_seed_rerun.py / gpt5mini_seed_rerun.py
-    "HYBRID_GP_Matern52_EI_ALT_gpt-5.5", "HYBRID_GP_Matern52_PI_ALT_gpt-5.5",  # -> hybrid_seed_rerun.py
+METHODS_OF_OTHER_SCRIPTS = {
+    "RGASP_Matern52_EI_nugget",
+    "LAGP_ALC_EI", "LAGP_NN_EI",
+    "RVM_like_ARD_RFF_EI",
+    "BNN_like_MLPensemble_EI",
+    "LLM_PURE_gpt-4o", "LLM_PURE_gpt-5.5", "LLM_PURE_gpt-5-mini",
+    "HYBRID_GP_Matern52_EI_ALT_gpt-5.5", "HYBRID_GP_Matern52_PI_ALT_gpt-5.5",
 }
 
 
@@ -146,7 +90,7 @@ def stable_int(text: str, modulo: int = 2**31 - 1) -> int:
 
 
 # ==============================================================================
-# 1. Oracle candidate-pool lookup (same as this session's other rerun scripts)
+# 1. Oracle candidate-pool lookup
 # ==============================================================================
 
 def build_oracle_lookup() -> np.ndarray:
@@ -194,7 +138,7 @@ def y_to_model_scale(y: np.ndarray) -> np.ndarray:
 
 
 # ==============================================================================
-# 2. Acquisition math -- copied verbatim from Benchmark v3.ipynb
+# 2. Acquisition math
 # ==============================================================================
 
 def gaussian_ei(mu, sd, best, xi=0.01):
@@ -245,8 +189,6 @@ def acquisition_scores(kind: str, mu, sd, y_best: float, rng: np.random.Generato
 
 def greedy_diverse_batch(candidate_idx: np.ndarray, acq: np.ndarray, X_scaled: np.ndarray, k: int,
                           rng: np.random.Generator, diversity_lambda: float) -> np.ndarray:
-    """Copied verbatim (indexing adapted to local 0..n-1 candidate arrays, matching
-    this session's rerun scripts, not Benchmark v3.ipynb's pool-index arrays)."""
     candidate_idx = np.asarray(candidate_idx, dtype=np.int64)
     acq = np.asarray(acq, dtype=float)
     if len(candidate_idx) <= k:
@@ -277,8 +219,7 @@ def greedy_diverse_batch(candidate_idx: np.ndarray, acq: np.ndarray, X_scaled: n
 
 
 # ==============================================================================
-# 3. Surrogate model classes -- copied VERBATIM from Benchmark v3.ipynb cell 8
-#    (fit/predict logic unchanged; these were never bug-affected)
+# 3. Surrogate model classes
 # ==============================================================================
 
 class ConstantSurrogate:
@@ -498,10 +439,7 @@ class ContextualLinUCBSurrogate:
 
 
 class MOFChemContextualBanditSurrogate:
-    """Verbatim from Benchmark v3.ipynb. `scaler=None` here (this script has no
-    precomputed pool_df to fit a MinMaxScaler on) -- _safe_raw_features()'s
-    fallback branch below reconstructs raw values from FEATURE_RANGES directly,
-    which is exactly equivalent to a MinMaxScaler fit on those same bounds."""
+    """`scaler=None` here (this script has no precomputed pool_df to fit a MinMaxScaler on) -- _safe_raw_features()'s fallback branch below reconstructs raw values from FEATURE_RANGES directly, which is exactly equivalent to a MinMaxScaler fit on those same bounds."""
 
     def __init__(self, scaler=None, ridge=1.0, success_weight=2.0, top_weight=4.0,
                  top_quantile=0.80, include_pairwise=True, include_distance_features=True):
@@ -598,336 +536,6 @@ class MOFChemContextualBanditSurrogate:
         return np.asarray(mu, dtype=float), np.maximum(np.asarray(sd, dtype=float), MIN_STD)
 
 
-##############################################################################
-# ALREADY-FIXED METHODS: full calling logic, ported in but DISABLED.
-#
-# BEFORE SUBMISSION:
-#   1. Uncomment this entire block (every line below currently starts with
-#      "# " -- strip that prefix from every line between the START/END
-#      markers; in most editors: select the block, use "toggle line comment"
-#      twice, or block-select the "# " column and delete it).
-#   2. Remove the `if method in ALREADY_FIXED_METHODS: continue` skip in
-#      main() (search "DELETE-BEFORE-SUBMISSION").
-#   3. RUN THE SMOKE TEST FIRST (SMOKE_TEST=True, small N_ITERATIONS/N_RUNS)
-#      before any real run -- this block adds real OpenAI API calls (costs
-#      money) and real R/rpy2 calls (RGASP, laGP) that were not exercised by
-#      the $0 smoke test this script has been validated with so far.
-#   4. Replace the 10 lightweight placeholder specs in METHOD_SPECS with the
-#      full specs below (search "FULL SPECS FOR ALREADY-FIXED METHODS").
-##############################################################################
-
-# ------------------------------------------------------------------
-# R / rpy2 bootstrap (identical to lagp_rerun.py / rgasp_bnn_pool_fix_rerun.py,
-# both validated working this session)
-# ------------------------------------------------------------------
-# import ctypes
-# R_HOME = Path(r"C:\Program Files\R\R-4.6.1")
-# R_LIBS_USER = Path.home() / "R" / "win-library" / "4.6"
-# os.environ["R_HOME"] = str(R_HOME)
-# os.environ["R_LIBS_USER"] = str(R_LIBS_USER)
-# os.environ["R_LIBS"] = str(R_LIBS_USER)
-# _bin_x64 = R_HOME / "bin" / "x64"
-# os.add_dll_directory(str(_bin_x64))
-# os.environ["PATH"] = str(_bin_x64) + os.pathsep + os.environ.get("PATH", "")
-# for _dll in ["R.dll", "Rblas.dll", "Rlapack.dll", "Riconv.dll"]:
-#     ctypes.CDLL(str(_bin_x64 / _dll))
-#
-# import rpy2.robjects as ro
-# from rpy2.robjects import default_converter, numpy2ri
-# from rpy2.robjects.packages import importr
-#
-# R_CONVERTER = default_converter + numpy2ri.converter
-# with R_CONVERTER.context():
-#     ro.r('.libPaths(c("{}", .libPaths()))'.format(str(R_LIBS_USER).replace("\\", "/")))
-#     ro.r("library(RobustGaSP)")
-#     ro.r("library(laGP)")
-# RobustGaSP = importr("RobustGaSP")
-#
-# LAGP_OMP_THREADS = max(1, (os.cpu_count() or 4) - 2)
-#
-# _R_RGASP_PREDICT = ro.r("""
-# function(model, Xnew) {
-#     p <- predict(model, Xnew)
-#     mu <- as.numeric(p[["mean"]])
-#     if ("sd" %in% names(p)) {
-#         sd <- as.numeric(p[["sd"]])
-#     } else if ("upper95" %in% names(p) && "lower95" %in% names(p)) {
-#         sd <- as.numeric(p[["upper95"]] - p[["lower95"]]) / (2 * 1.96)
-#     } else {
-#         fallback <- stats::sd(mu)
-#         if (!is.finite(fallback) || fallback <= 0) fallback <- 1
-#         sd <- rep(fallback, length(mu))
-#     }
-#     sd[!is.finite(sd)] <- 1
-#     sd[sd <= 0] <- 1e-9
-#     cbind(mu, sd)
-# }
-# """)
-#
-# _R_LAGP_PREDICT = ro.r("""
-# function(Xnew, Xref, Zref, start, end, method, ompt) {
-#     p <- laGP::aGP(
-#         X = Xref, Z = Zref, XX = Xnew,
-#         start = start, end = end, method = method,
-#         omp.threads = ompt, verb = 0
-#     )
-#     mu <- as.numeric(p[["mean"]])
-#     if ("var" %in% names(p)) {
-#         sd <- sqrt(pmax(as.numeric(p[["var"]]), 0))
-#     } else if ("s2" %in% names(p)) {
-#         sd <- sqrt(pmax(as.numeric(p[["s2"]]), 0))
-#     } else if ("sd" %in% names(p)) {
-#         sd <- as.numeric(p[["sd"]])
-#     } else {
-#         fallback <- stats::sd(mu)
-#         if (!is.finite(fallback) || fallback <= 0) fallback <- 1
-#         sd <- rep(fallback, length(mu))
-#     }
-#     sd[!is.finite(sd)] <- 1
-#     sd[sd <= 0] <- 1e-9
-#     cbind(mu, sd)
-# }
-# """)
-#
-#
-# class RGASPSurrogate:
-#     """Validated this session (rgasp_bnn_pool_fix_rerun.py) -- nugget.est=TRUE fix applied."""
-#     def __init__(self, max_eval: int = 60):
-#         self.max_eval = max_eval
-#
-#     def fit(self, X: np.ndarray, y: np.ndarray):
-#         with R_CONVERTER.context():
-#             self.model = RobustGaSP.rgasp(
-#                 design=X, response=y,
-#                 **{"nugget.est": True, "kernel_type": "matern_5_2", "max_eval": int(self.max_eval)},
-#             )
-#         return self
-#
-#     def predict(self, X: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
-#         with R_CONVERTER.context():
-#             result = _R_RGASP_PREDICT(self.model, X)
-#         arr = np.asarray(result)
-#         return arr[:, 0], arr[:, 1]
-#
-#
-# class RLaGPSurrogate:
-#     """Validated this session (lagp_rerun.py) -- aGP(X=,Z=,XX=) + p[["var"]] fix applied."""
-#     def __init__(self, method: str = "alc", start: int = 10, end: int = 60):
-#         self.method = method
-#         self.start = start
-#         self.end = end
-#
-#     def fit(self, X: np.ndarray, y: np.ndarray):
-#         self.X_train = np.asarray(X, dtype=float)
-#         self.y_train = np.asarray(y, dtype=float).reshape(-1)
-#         return self
-#
-#     def predict(self, X: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
-#         X = np.asarray(X, dtype=float)
-#         n = len(self.X_train)
-#         end = max(2, min(self.end, n - 1))
-#         start = max(2, min(self.start, end - 1))
-#         with R_CONVERTER.context():
-#             result = _R_LAGP_PREDICT(X, self.X_train, self.y_train, int(start), int(end),
-#                                       self.method, LAGP_OMP_THREADS)
-#         arr = np.asarray(result)
-#         return arr[:, 0], arr[:, 1]
-#
-#
-# # ------------------------------------------------------------------
-# # LLM / OpenAI calling logic (identical math/prompt to hybrid_pi_repro_rerun.py
-# # and llm_pure_seed_rerun.py, both validated this session)
-# # ------------------------------------------------------------------
-# from pydantic import BaseModel, Field
-#
-# OPENAI_API_KEY_ENV_VAR = "OPENAI_API_KEY"
-# OPENAI_REASONING_EFFORT = "none"
-# LLM_MAX_REPAIR_ATTEMPTS = 3
-# LLM_WINDOW = 45  # rolling history window sent to the LLM each call
-# PRICE_INPUT_PER_M = 5.00
-# PRICE_OUTPUT_PER_M = 30.00
-#
-# _COST_STATE = {"input_tokens": 0, "output_tokens": 0, "calls": 0}
-#
-#
-# def get_openai_client():
-#     from openai import OpenAI
-#     key = os.environ.get(OPENAI_API_KEY_ENV_VAR, "").strip()
-#     if not key:
-#         raise RuntimeError(f"No OpenAI API key found. Set {OPENAI_API_KEY_ENV_VAR} as an env var.")
-#     return OpenAI(api_key=key)
-#
-#
-# class MOFConditionChoice(BaseModel):
-#     metal_amount: int = Field(..., description="Integer 5 to 75.")
-#     modulator: int = Field(..., description="Integer 5 to 15.")
-#     add_solvent: int = Field(..., description="Integer 0 to 30.")
-#     reaction_time: int = Field(..., description="Integer 1 to 12.")
-#     reaction_temperature: int = Field(..., description="Integer 10 to 30.")
-#     rationale: str = Field(..., description="Brief chemical and active-learning rationale.")
-#
-#
-# class MOFNextBatch(BaseModel):
-#     strategy_summary: str = Field(..., description="Brief strategy for the three proposed experiments.")
-#     next_conditions: List[MOFConditionChoice] = Field(..., min_length=3, max_length=3)
-#
-#
-# def llm_system_prompt() -> str:
-#     return """
-# You are a metal-organic framework synthetic chemist who chooses the next
-# microwave synthesis experiments for aluminum dicarboxylate MOFs.
-# Choose exactly 3 new experiments from the allowed ranges.
-# The goal is to maximize q_final = Intensity_final / FWHM_final.
-# 1. metal_amount: integer 5 to 75. 2. modulator: integer 5 to 15.
-# 3. add_solvent: integer 0 to 30. 4. reaction_time: integer 1 to 12.
-# 5. reaction_temperature: integer 10 to 30.
-# Do not invent conditions outside the stated ranges or repeat previous ones.
-# Output ONLY the five encoded integer variables (plus a short rationale) for
-# each of the three new experiments.
-# """
-#
-#
-# def build_user_payload(history_records: List[Dict[str, Any]], repair_context: str = "") -> Dict[str, Any]:
-#     return {
-#         "job": "Suggest the next three MOF synthesis experiments for active learning.",
-#         "objective": "Maximize q_final = Intensity_final / FWHM_final.",
-#         "previous_experiments": history_records[-LLM_WINDOW:],
-#         "allowed_ranges": {c: f"integer {lo} to {hi}" for c, (lo, hi) in FEATURE_RANGES.items()},
-#         "required_behavior": [
-#             "Propose exactly three new experiments.",
-#             "Do not repeat previous experiments.",
-#             "Use one exploitation condition, one local perturbation, and one exploration condition.",
-#         ],
-#         "repair_context": repair_context,
-#     }
-#
-#
-# def call_llm_for_batch(client, model_name: str, history_records: List[Dict[str, Any]],
-#                         tried: set, seed: int) -> Tuple[List[Dict[str, int]], Dict[str, Any]]:
-#     import random as _random
-#     repair_context = ""
-#     for attempt in range(1, LLM_MAX_REPAIR_ATTEMPTS + 1):
-#         payload = build_user_payload(history_records, repair_context)
-#         try:
-#             response = client.chat.completions.parse(
-#                 model=model_name,
-#                 messages=[{"role": "system", "content": llm_system_prompt()},
-#                           {"role": "user", "content": json.dumps(payload, default=float)}],
-#                 response_format=MOFNextBatch,
-#                 reasoning_effort=OPENAI_REASONING_EFFORT,
-#                 seed=seed,
-#                 max_completion_tokens=1500,
-#             )
-#             usage = getattr(response, "usage", None)
-#             if usage is not None:
-#                 _COST_STATE["input_tokens"] += getattr(usage, "prompt_tokens", 0) or 0
-#                 _COST_STATE["output_tokens"] += getattr(usage, "completion_tokens", 0) or 0
-#                 _COST_STATE["calls"] += 1
-#             parsed = response.choices[0].message.parsed
-#             conditions = [c.model_dump() for c in parsed.next_conditions]
-#             errors, seen = [], set()
-#             for c in conditions:
-#                 t = tuple(int(c[f]) for f in FEATURES)
-#                 if not all(FEATURE_RANGES[f][0] <= c[f] <= FEATURE_RANGES[f][1] for f in FEATURES):
-#                     errors.append(f"Out of range: {c}")
-#                 elif t in tried or t in seen:
-#                     errors.append(f"Repeat: {c}")
-#                 seen.add(t)
-#             if not errors and len(conditions) == 3:
-#                 return conditions, {"valid": True, "strategy_summary": parsed.strategy_summary}
-#             repair_context = "Your previous answer was invalid: " + "; ".join(errors)
-#         except Exception as e:
-#             repair_context = f"Your previous answer could not be used ({str(e)[:200]}). Try again."
-#     fallback = []
-#     while len(fallback) < 3:
-#         c = {col: _random.randint(*FEATURE_RANGES[col]) for col in FEATURES}
-#         t = tuple(c[col] for col in FEATURES)
-#         if t not in tried and t not in {tuple(f[col] for col in FEATURES) for f in fallback}:
-#             c["rationale"] = "random_fallback_after_repair_attempts_exhausted"
-#             fallback.append(c)
-#     return fallback, {"valid": False, "strategy_summary": ""}
-#
-#
-# # ------------------------------------------------------------------
-# # FULL SPECS FOR ALREADY-FIXED METHODS -- paste these into METHOD_SPECS,
-# # replacing the 10 lightweight placeholder dicts currently there.
-# # ------------------------------------------------------------------
-# FULL_SPECS_ALREADY_FIXED = [
-#     {"name": "RGASP_Matern52_EI_nugget", "family": "Gaussian Processes", "surrogate": "rgasp", "acq": "ei", "max_eval": 60},
-#     {"name": "LAGP_ALC_EI", "family": "Approximate GPs", "surrogate": "lagp", "acq": "ei", "lagp_method": "alc", "start": 10, "end": 60},
-#     {"name": "LAGP_NN_EI", "family": "Approximate GPs", "surrogate": "lagp", "acq": "ei", "lagp_method": "nn", "start": 10, "end": 60},
-#     {"name": "RVM_like_ARD_RFF_EI", "family": "Basis Regression", "surrogate": "rvm_like", "acq": "ei", "n_components": 256},
-#     {"name": "BNN_like_MLPensemble_EI", "family": "Machine Learning", "surrogate": "bnn_like", "acq": "ei", "n_models": 8},
-#     {"name": "LLM_PURE_gpt-4o", "family": "LLM", "surrogate": "llm", "acq": "llm_json", "llm_model": "gpt-4o"},
-#     {"name": "LLM_PURE_gpt-5.5", "family": "LLM", "surrogate": "llm", "acq": "llm_json", "llm_model": "gpt-5.5"},
-#     {"name": "LLM_PURE_gpt-5-mini", "family": "LLM", "surrogate": "llm", "acq": "llm_json", "llm_model": "gpt-5-mini"},
-#     {"name": "HYBRID_GP_Matern52_EI_ALT_gpt-5.5", "family": "LLM-GP Hybrid", "surrogate": "hybrid_gp_llm", "acq": "hybrid_alternating", "llm_model": "gpt-5.5", "kernel": "matern52", "gp_acq": "ei", "n_restarts": 1},
-#     {"name": "HYBRID_GP_Matern52_PI_ALT_gpt-5.5", "family": "LLM-GP Hybrid", "surrogate": "hybrid_gp_llm", "acq": "hybrid_alternating", "llm_model": "gpt-5.5", "kernel": "matern52", "gp_acq": "pi", "n_restarts": 1},
-# ]
-#
-#
-# # ------------------------------------------------------------------
-# # ADD to make_surrogate(): these two branches (rvm_like/bnn_like already
-# # exist as classes above the factory; rgasp/lagp need the classes from
-# # this block)
-# # ------------------------------------------------------------------
-# #     if kind == "rvm_like":
-# #         return RVMLikeSurrogate(random_state=seed, n_components=spec.get("n_components", 256))
-# #     if kind == "bnn_like":
-# #         return MLPSurrogateBNNLike(random_state=seed, n_models=spec.get("n_models", 8))
-# #     if kind == "rgasp":
-# #         return RGASPSurrogate(max_eval=spec.get("max_eval", 60))
-# #     if kind == "lagp":
-# #         return RLaGPSurrogate(method=spec.get("lagp_method", "alc"), start=spec.get("start", 10), end=spec.get("end", 60))
-# # (RVMLikeSurrogate class itself: identical to RFFGPSurrogate but with
-# #  ARDRegression instead of BayesianRidge -- see Benchmark v3.ipynb if it
-# #  needs to be re-added; MLPSurrogateBNNLike is given in full above.)
-#
-#
-# # ------------------------------------------------------------------
-# # REPLACE the surrogate-selection block inside run_single_method()'s
-# # `else:` branch (the branch that currently only handles ordinary
-# # surrogates) with this version, which adds "llm" and "hybrid_gp_llm"
-# # as two more special cases alongside "random":
-# # ------------------------------------------------------------------
-# #             if spec["surrogate"] == "random":
-# #                 batch = sample_untried_candidates(rng, tried, BATCH_SIZE)
-# #                 status = "random"
-# #             elif spec["surrogate"] == "llm":
-# #                 client = get_openai_client()  # cache this outside the loop in real use
-# #                 history_records = [{**c, TARGET: y} for c, y in zip(history_conditions, history_y_raw)]
-# #                 batch, meta = call_llm_for_batch(client, spec["llm_model"], history_records, tried,
-# #                                                   seed=seed_base + iteration)
-# #                 status = "llm_ok" if meta["valid"] else "llm_fallback_random"
-# #             elif spec["surrogate"] == "hybrid_gp_llm":
-# #                 if iteration % 2 == 0:
-# #                     client = get_openai_client()
-# #                     history_records = [{**c, TARGET: y} for c, y in zip(history_conditions, history_y_raw)]
-# #                     batch, meta = call_llm_for_batch(client, spec["llm_model"], history_records, tried,
-# #                                                       seed=seed_base + iteration)
-# #                     status = "llm_ok" if meta["valid"] else "llm_fallback_random"
-# #                 else:
-# #                     gp_spec = {"surrogate": "gp", "kernel": spec.get("kernel", "matern52"),
-# #                                "acq": spec.get("gp_acq", "ei"), "n_restarts": spec.get("n_restarts", 1),
-# #                                "diversity_lambda": spec.get("diversity_lambda", DIVERSITY_LAMBDA)}
-# #                     X_train = np.array([scale_row(c) for c in history_conditions])
-# #                     y_train_model = y_to_model_scale(np.array(history_y_raw))
-# #                     model = make_surrogate(gp_spec, seed_base + iteration).fit(X_train, y_train_model)
-# #                     candidates = sample_untried_candidates(rng, tried, ACQ_CANDIDATES_PER_ITER)
-# #                     X_cand = np.array([scale_row(c) for c in candidates])
-# #                     mu, sd = model.predict(X_cand)
-# #                     acq = acquisition_scores(gp_spec["acq"], mu, sd, float(np.max(y_train_model)), rng, gp_spec)
-# #                     chosen_local = greedy_diverse_batch(np.arange(len(candidates)), acq, X_cand, BATCH_SIZE,
-# #                                                          rng, gp_spec["diversity_lambda"])
-# #                     batch = [candidates[i] for i in chosen_local]
-# #                     status = f"hybrid_gp_iteration_acq={gp_spec['acq']}"
-# #             else:
-# #                 ... (existing non-LLM branch, unchanged) ...
-##############################################################################
-# END ALREADY-FIXED METHODS BLOCK
-##############################################################################
-
-
 def make_surrogate(spec: Dict[str, Any], seed: int):
     kind = spec["surrogate"]
     if kind == "gp":
@@ -956,15 +564,14 @@ def make_surrogate(spec: Dict[str, Any], seed: int):
     if kind == "constant":
         return ConstantSurrogate()
     raise ValueError(
-        f"Unknown or intentionally-unported surrogate type: {kind!r} "
+        f"Unknown surrogate type: {kind!r} "
         f"(rgasp/lagp/hetgp/gpytorch_exact/svigp/ngboost/llm/hybrid_gp_llm are "
-        f"not implemented here -- see module docstring / ALREADY_FIXED_METHODS)"
+        f"implemented in the other scripts of this folder)"
     )
 
 
 # ==============================================================================
-# 4. Method registry -- all 39, matching Benchmark v3.ipynb's METHOD_SPECS
-#    (10 already-fixed ones are lightweight placeholders -- see SKIP-LIST NOTICE)
+# 4. Method registry
 # ==============================================================================
 
 METHOD_SPECS: List[Dict[str, Any]] = [
@@ -983,16 +590,16 @@ METHOD_SPECS: List[Dict[str, Any]] = [
     {"name": "MOF_Quantile90_GP_Matern52", "family": "MOF-specific", "surrogate": "gp", "kernel": "matern52", "acq": "quantile", "tau": 0.90, "n_restarts": 1},
     {"name": "MOF_CVaR90_GP_Matern52", "family": "MOF-specific", "surrogate": "gp", "kernel": "matern52", "acq": "cvar", "tau": 0.90, "n_restarts": 1},
     {"name": "MOF_Diversity_EI_GP_Matern52", "family": "MOF-specific", "surrogate": "gp", "kernel": "matern52", "acq": "ei", "diversity_lambda": 0.10, "n_restarts": 1},
-    {"name": "RGASP_Matern52_EI_nugget", "family": "Gaussian Processes", "surrogate": "rgasp", "already_fixed_placeholder": True},
-    {"name": "LAGP_ALC_EI", "family": "Approximate GPs", "surrogate": "lagp", "already_fixed_placeholder": True},
-    {"name": "LAGP_NN_EI", "family": "Approximate GPs", "surrogate": "lagp", "already_fixed_placeholder": True},
+    {"name": "RGASP_Matern52_EI_nugget", "family": "Gaussian Processes", "surrogate": "rgasp", "in_other_script": True},
+    {"name": "LAGP_ALC_EI", "family": "Approximate GPs", "surrogate": "lagp", "in_other_script": True},
+    {"name": "LAGP_NN_EI", "family": "Approximate GPs", "surrogate": "lagp", "in_other_script": True},
     {"name": "RFFGP_EI", "family": "Approximate GPs", "surrogate": "rffgp", "acq": "ei", "n_components": 512},
     {"name": "FITCGP_Nystroem_EI", "family": "Approximate GPs", "surrogate": "fitcgp_like", "acq": "ei", "n_components": 120},
     {"name": "BLM_EI", "family": "Basis Regression", "surrogate": "blm", "acq": "ei"},
-    {"name": "RVM_like_ARD_RFF_EI", "family": "Basis Regression", "surrogate": "rvm_like", "already_fixed_placeholder": True},
+    {"name": "RVM_like_ARD_RFF_EI", "family": "Basis Regression", "surrogate": "rvm_like", "in_other_script": True},
     {"name": "BART_like_ExtraTrees_EI", "family": "Basis Regression", "surrogate": "bart_like", "acq": "ei", "n_estimators": 300},
     {"name": "CONFRF_EI", "family": "Machine Learning", "surrogate": "confrf", "acq": "ei", "n_estimators": 300},
-    {"name": "BNN_like_MLPensemble_EI", "family": "Machine Learning", "surrogate": "bnn_like", "already_fixed_placeholder": True},
+    {"name": "BNN_like_MLPensemble_EI", "family": "Machine Learning", "surrogate": "bnn_like", "in_other_script": True},
     {"name": "GBC_like_QuantileBoosting_EI", "family": "Machine Learning", "surrogate": "qboost", "acq": "ei"},
     {"name": "GBC_like_QuantileBoosting_Q90", "family": "Machine Learning", "surrogate": "qboost", "acq": "quantile", "tau": 0.90},
     {"name": "RL_Contextual_LinUCB", "family": "Reinforcement Learning", "surrogate": "linucb", "acq": "ucb", "alpha": 1.75},
@@ -1002,11 +609,11 @@ METHOD_SPECS: List[Dict[str, Any]] = [
     {"name": "MOF_ChemBandit_Quantile90_TailWeighted", "family": "Reinforcement Learning", "surrogate": "mof_chem_bandit", "acq": "quantile", "tau": 0.90, "ridge": 1.0, "success_weight": 2.0, "top_weight": 4.0, "top_quantile": 0.80},
     {"name": "MOF_ChemBandit_CVaR90_TailWeighted", "family": "Reinforcement Learning", "surrogate": "mof_chem_bandit", "acq": "cvar", "tau": 0.90, "ridge": 1.0, "success_weight": 2.0, "top_weight": 4.0, "top_quantile": 0.80},
     {"name": "RANDOM_SEARCH", "family": "Baseline", "surrogate": "random", "acq": "random"},
-    {"name": "LLM_PURE_gpt-4o", "family": "LLM", "surrogate": "llm", "already_fixed_placeholder": True},
-    {"name": "LLM_PURE_gpt-5.5", "family": "LLM", "surrogate": "llm", "already_fixed_placeholder": True},
-    {"name": "LLM_PURE_gpt-5-mini", "family": "LLM", "surrogate": "llm", "already_fixed_placeholder": True},
-    {"name": "HYBRID_GP_Matern52_EI_ALT_gpt-5.5", "family": "LLM-GP Hybrid", "surrogate": "hybrid_gp_llm", "already_fixed_placeholder": True},
-    {"name": "HYBRID_GP_Matern52_PI_ALT_gpt-5.5", "family": "LLM-GP Hybrid", "surrogate": "hybrid_gp_llm", "already_fixed_placeholder": True},
+    {"name": "LLM_PURE_gpt-4o", "family": "LLM", "surrogate": "llm", "in_other_script": True},
+    {"name": "LLM_PURE_gpt-5.5", "family": "LLM", "surrogate": "llm", "in_other_script": True},
+    {"name": "LLM_PURE_gpt-5-mini", "family": "LLM", "surrogate": "llm", "in_other_script": True},
+    {"name": "HYBRID_GP_Matern52_EI_ALT_gpt-5.5", "family": "LLM-GP Hybrid", "surrogate": "hybrid_gp_llm", "in_other_script": True},
+    {"name": "HYBRID_GP_Matern52_PI_ALT_gpt-5.5", "family": "LLM-GP Hybrid", "surrogate": "hybrid_gp_llm", "in_other_script": True},
 ]
 assert len(METHOD_SPECS) == 39, f"expected 39 methods, got {len(METHOD_SPECS)}"
 
@@ -1133,17 +740,15 @@ def main() -> None:
     smoke_method_budget = 3
 
     with open(detail_path, "a", encoding="utf-8") as detail_writer:
-        for run_idx in range(N_RUNS_LOCAL):
+        for run_idx in range(RUN_IDX_START, RUN_IDX_START + N_RUNS_LOCAL):
             n_smoke_done = 0
             for spec in METHOD_SPECS:
                 method = spec["name"]
 
-                if spec.get("already_fixed_placeholder", False):
-                    continue  # these 10 come from their own dedicated rerun scripts
+                if spec.get("in_other_script", False):
+                    continue
 
-                # DELETE-BEFORE-SUBMISSION: this skip exists only to avoid
-                # redundant spend on methods already reproduced this session.
-                if method in ALREADY_FIXED_METHODS:
+                if method in METHODS_OF_OTHER_SCRIPTS:
                     continue
 
                 if SMOKE_TEST:
@@ -1161,7 +766,7 @@ def main() -> None:
     df = pd.DataFrame(all_rows)
     df.to_csv(metrics_path, index=False)
     print("\n=== DONE ===")
-    print(f"Methods x runs completed this session: {len(df.groupby(['method','run']))}")
+    print(f"Methods x runs completed: {len(df.groupby(['method','run']))}")
 
 
 if __name__ == "__main__":

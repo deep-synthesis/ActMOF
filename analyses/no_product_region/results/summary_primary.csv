@@ -1,0 +1,9 @@
+comparison,outcome,median_B0,q25_B0,q75_B0,median_M1,q25_M1,q75_M1,median_paired_diff,wilcoxon_p,median_M3,q25_M3,q75_M3,holm_p
+M1 vs B0,N_first (experiments to first product),12.5,4.75,20.25,12.5,4.75,20.25,0.0,1.0,,,,1.0
+M1 vs B0,"share of queries with q>0, iterations 1-5",0.0666666666666666,0.0,0.2166666666666666,0.1,0.0,0.2666666666666666,0.0,0.3865375479030093,,,,1.0
+M1 vs B0,best-so-far q at iteration 3 (12 experiments),1072.5,0.0,11866.0,1072.5,0.0,14722.75,0.0,0.0431144467830753,,,,0.3449155742646028
+M1 vs B0,best-so-far q at iteration 13 (42 experiments),92324.0,56031.5,124209.75,78227.5,44566.0,112707.75,735.5,0.4688451964332785,,,,1.0
+M3 vs B0,N_first (experiments to first product),12.5,4.75,20.25,,,,0.0,1.0,12.5,4.75,20.25,1.0
+M3 vs B0,"share of queries with q>0, iterations 1-5",0.0666666666666666,0.0,0.2166666666666666,,,,0.0,0.1723162624683927,0.0666666666666666,0.0,0.0833333333333333,1.0
+M3 vs B0,best-so-far q at iteration 3 (12 experiments),1072.5,0.0,11866.0,,,,0.0,0.6547208460185769,1072.5,0.0,7196.0,1.0
+M3 vs B0,best-so-far q at iteration 13 (42 experiments),92324.0,56031.5,124209.75,,,,-12406.5,0.1712387852490995,54940.5,22268.0,107285.75,1.0

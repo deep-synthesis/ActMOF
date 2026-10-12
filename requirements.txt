@@ -1,25 +1,19 @@
-# Python dependencies for ActMOF_Code.
-# Versions shown are what this codebase was actually run and verified with
-# (conda env `myWork_Clone`); floors (>=) rather than exact pins so the repo
-# doesn't rot against future patch releases, but if something breaks, pin to
-# these exact versions first before debugging further.
-
+# Python packages (versions the code was run with; Python 3.10)
 numpy>=2.2.6
 pandas>=2.3.3
 scipy>=1.15.3
 scikit-learn>=1.7.2
-matplotlib>=3.10.8
-seaborn>=0.13.2
 pydantic>=2.12.5
-openai>=2.43.0
+openai>=2.43.0            # the five LLM-backed strategies
 
-# Only needed if dataset_construction/build_design_grid.py is run with
-# OUTPUT_FORMAT = "xlsx" instead of the default "csv":
-# xlsxwriter>=3.2.9
+# analyses/
+statsmodels>=0.14.6
+scikit-posthocs>=0.17.0
+matplotlib>=3.10.8
+tqdm>=4.67.1
+
+# optional
+# rpy2>=3.6.7             # benchmark/families/lagp.py and rgasp_bnn.py (also needs R with laGP and RobustGaSP)
+# fairmat-readers-xrd     # wetlab/pxrd/rasx_process.py (reads Rigaku .rasx files)
+# xlsxwriter>=3.2.9       # dataset_construction/build_design_grid.py with OUTPUT_FORMAT = "xlsx"
 # openpyxl>=3.1.5
-
-# Only needed for benchmark/families/lagp.py and benchmark/families/rgasp_bnn.py
-# (the two R-backed method families). See benchmark/README.md for the R-side
-# setup (R itself, plus the laGP / RobustGaSP CRAN packages) -- rpy2 alone is
-# not sufficient.
-# rpy2>=3.6.7

@@ -1,0 +1,169 @@
+####################################################################### 
+# 
+# This file contains crystal structure data downloaded from the 
+# Cambridge Structural Database (CSD) hosted by the Cambridge 
+# Crystallographic Data Centre (CCDC).
+# 
+# Full information about CCDC data access policies and citation 
+# guidelines are available at http://www.ccdc.cam.ac.uk/access/V1 
+# 
+# Audit and citation data items may have been added by the CCDC. 
+# Please retain this information to preserve the provenance of 
+# this file and to allow appropriate attribution of the data. 
+# 
+#######################################################################
+
+data_MIL-160
+_audit_block_doi                 10.5517/ccdc.csd.cc1zcx5f
+_database_code_depnum_ccdc_archive 'CCDC 1828695'
+loop_
+_citation_id
+_citation_doi
+_citation_year
+1 10.1002/ejic.201800323 2018
+2 10.1002/ejic.201800323 2018
+loop_
+_audit_author_name
+_audit_author_address
+'Michael Wharmby'
+;DESY, Notkestr. 85, 22607 Hamburg
+Germany
+;
+_audit_update_record             
+;
+2018-03-09 deposited with the CCDC.	2026-08-10 downloaded from the CCDC.
+;
+# start Validation Reply Form
+_vrf_GEOM001_MIL-160             
+;
+PROBLEM: _geom_bond_atom_site_label_1 is missing
+RESPONSE: Not available from TOPAS refinement output
+;
+_vrf_GEOM003_MIL-160             
+;
+PROBLEM: _geom_bond_distance is missing
+RESPONSE: Not available from TOPAS refinement output
+;
+_vrf_GEOM006_MIL-160             
+;
+PROBLEM: _geom_angle_atom_site_label_2 is missing
+RESPONSE: Not available from TOPAS refinement output
+;
+_vrf_GEOM007_MIL-160             
+;
+PROBLEM: _geom_angle_atom_site_label_3 is missing
+RESPONSE: Not available from TOPAS refinement output
+;
+_vrf_PLAT601_MIL-160             
+;
+PROBLEM: Structure Contains Solvent Accessible VOIDS of .       2412 Ang**3
+RESPONSE: Porous framework with guests removed. This is expected.
+;
+# Added during the CSD deposition process: Friday 09 March 2018 03:44 PM
+# end Validation Reply Form
+
+
+#==============================================================================
+# Chemical + Structural + Crystal Information
+#==============================================================================
+_chemical_formula_moiety         'C6 Al1 O6'
+# Note: _chemical_formula_sum/_weight/_cell_formula_units_Z need to be 
+# recalculated if any one is changed
+_chemical_formula_sum            'C48 Al8 O48'
+_chemical_formula_weight         1560.32
+_cell_formula_units_Z            2
+_pd_char_colour                  white
+_exptl_crystal_density_diffrn    1.096
+_exptl_crystal_density_meas      'Not measured'
+_exptl_crystal_density_method    'Not measured'
+_cell_measurement_temperature    298
+
+#==============================================================================
+# Instrument + Refinement Information
+#==============================================================================
+_diffrn_ambient_temperature      298
+_diffrn_measurement_device_type  'Multi-Analyser Crystal Detector, I11, Diamond'
+_diffrn_radiation_probe          x-ray
+_diffrn_radiation_wavelength     0.8252491
+_diffrn_radiation_type           synchrotron
+_pd_proc_ls_prof_wR_factor       0.0940
+_pd_proc_ls_prof_wR_expected     0.0470
+_refine_ls_R_I_factor            0.020
+_refine_ls_goodness_of_fit_all   2.00
+_refine_ls_shift/su_max          0
+
+#==============================================================================
+# Phase Information
+#==============================================================================
+_cell_length_a                   21.07379(13)
+_cell_length_b                   21.07379(13)
+_cell_length_c                   10.64692(8)
+_cell_angle_alpha                90
+_cell_angle_beta                 90
+_cell_angle_gamma                90
+_cell_volume                     4728.35(7)
+_symmetry_cell_setting           tetragonal
+_symmetry_space_group_name_H-M   'I 41/a m d'
+_symmetry_space_group_name_Hall  '-I 4bd 2'
+_space_group_IT_number           141
+loop_
+_symmetry_equiv_pos_as_xyz
+'-x, -y, -z'
+'-x, y, z'
+'-x+1/2, -y, z+1/2'
+'-x+1/2, y, -z+1/2'
+'-y+1/4, -x+1/4, -z-1/4'
+'-y+1/4, x-1/4, z+1/4'
+'-y-1/4, -x+1/4, z-1/4'
+'-y-1/4, x-1/4, -z+1/4'
+'y+1/4, -x+1/4, z-1/4'
+'y+1/4, x-1/4, -z+1/4'
+'y-1/4, -x+1/4, -z-1/4'
+'y-1/4, x-1/4, z+1/4'
+'x, -y, -z'
+'x, y, z'
+'x+1/2, -y, z+1/2'
+'x+1/2, y, -z+1/2'
+'-x+1/2, -y+1/2, -z+1/2'
+'-x+1/2, y+1/2, z+1/2'
+'-x, -y+1/2, z'
+'-x, y+1/2, -z'
+'-y-1/4, -x-1/4, -z+1/4'
+'-y-1/4, x+1/4, z-1/4'
+'-y+1/4, -x-1/4, z+1/4'
+'-y+1/4, x+1/4, -z-1/4'
+'y-1/4, -x-1/4, z+1/4'
+'y-1/4, x+1/4, -z-1/4'
+'y+1/4, -x-1/4, -z+1/4'
+'y+1/4, x+1/4, z-1/4'
+'x+1/2, -y+1/2, -z+1/2'
+'x+1/2, y+1/2, z+1/2'
+'x, -y+1/2, z'
+'x, y+1/2, -z'
+
+# Atomic coordinates & thermal parameters
+loop_
+_atom_site_label
+_atom_site_type_symbol
+_atom_site_fract_x
+_atom_site_fract_y
+_atom_site_fract_z
+_atom_site_occupancy
+_atom_site_adp_type
+_atom_site_B_iso_or_equiv
+Al1 Al 0.31511(11) 0 0 1 Biso 0.27(7)
+O1 O 0.25530(10) 0.00530(10) 0.125 1 Biso 0.40(5)
+O2 O 0.38133(12) 0.00523(10) 0.11497(17) 1 Biso 0.40(5)
+O3 O 0.34222(11) 0.06577(10) 0.27510(19) 1 Biso 0.40(5)
+C1 C 0.38638(17) 0.03779(11) 0.2117(2) 1 Biso 1.18(10)
+C2 C 0.44804(11) 0.05399(14) 0.2823(3) 1 Biso 1.18(10)
+C3 C 0.46554(11) 0.08356(16) 0.3883(3) 1 Biso 1.18(10)
+O4 O 0.5 0.03475(19) 0.2125(4) 1 Biso 0.40(5)
+#--eof--eof--eof--eof--eof--eof--eof--eof--eof--eof--eof--eof--eof--eof--eof--#
+_chemical_name_systematic        MIL-160
+_exptl_crystal_colour            white
+_exptl_crystal_description       powder
+_chemical_melting_point          ?
+_chemical_compound_source        N/A
+_exptl_crystal_preparation       'Guest free.'
+_refine_special_details          'Rietveld refinement.'

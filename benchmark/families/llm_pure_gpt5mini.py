@@ -1,33 +1,13 @@
-"""
-================================================================================
-Seed-fixed rerun of LLM_PURE_gpt-5-mini (window=45, full budget)
-================================================================================
+"""llm_pure_gpt5mini.py -- one LLM-only strategy: LLM_PURE_gpt-5-mini.
 
-Validation-scale rerun of the cheapest of the 3 original benchmark models,
-with the two real, fixable bugs corrected:
-  - seed IS now passed (gpt-5-mini confirmed to accept it - see
-    verify_original_models.py results)
-  - reasoning_effort="minimal" is set explicitly (gpt-5-mini defaults to
-    "medium" reasoning effort, which - confirmed by the same probe - silently
-    burns the whole token budget and returns empty content otherwise; this is
-    the same failure mode DeepSeek hit)
-  - temperature is NOT passed - gpt-5-mini rejects it server-side (confirmed);
-    this is a hard API limitation for GPT-5-family models, not something this
-    script can fix, and is disclosed rather than silently worked around.
+Same messages, checks, retries and random fallback as llm_pure_gpt4o_gpt55.py. gpt-5-mini accepts no temperature and
+is run with reasoning_effort "minimal" and a fixed seed (seed of the run + iteration) with every call. Before the
+runs, one test call stops the script if the API has dropped the seed or the reasoning effort. Every iteration is
+logged to llm_history_gpt5mini.jsonl.
+Protocol: 5 runs, 3 starting experiments + 39 iterations of 3 experiments.
 
-Protocol matches Benchmark v3.ipynb exactly for this one method: window=45,
-BUDGET_TOTAL_EXPERIMENTS=150 (49 iterations after the initial 3), 5 runs,
-same seed formula (RANDOM_STATE + 10_000*run + stable_int(method)).
-
-Uses the real design_grid_part*.csv full-factorial pool for ground truth
-q_final (same O(1) lookup array as the other standalone scripts in this
-project), and client.chat.completions.parse (not client.responses.parse -
-that endpoint has no seed parameter, see openai_window_ablation.py).
-
-Compare the result against the existing LLM_PURE_gpt-5-mini row in
-bo_benchmark_final_summary.csv (mean_best_q=74,206, std=29,098, 5 runs) to
-see whether fixing seed materially changes the reported numbers.
-================================================================================
+Requires the OpenAI API key in the environment variable OPENAI_API_KEY; the calls are billed.
+ACTMOF_POOL_DIR and ACTMOF_OUTPUT_DIR as in the other scripts. Set SMOKE_TEST = True for a short trial run.
 """
 
 from __future__ import annotations
@@ -50,12 +30,7 @@ from pydantic import BaseModel, Field
 # ==============================================================================
 
 OPENAI_API_KEY_ENV_VAR = "OPENAI_API_KEY"
-OPENAI_API_KEY_FALLBACK = "PASTE_YOUR_OPENAI_API_KEY_HERE"
 
-# Observed 2026-09-08: CONFIRMED via a real API call (response.model read
-# back directly) to resolve to gpt-5-mini-2025-08-07. Used as-is below, not
-# pinned to this dated snapshot -- see ../README.md's "Resolved model
-# snapshots" section.
 OPENAI_MODEL = "gpt-5-mini"
 REASONING_EFFORT = "minimal"   # confirmed necessary - see module docstring
 TRY_TEMPERATURE = False        # gpt-5-mini rejects temperature server-side;
@@ -69,17 +44,13 @@ WINDOW = 45
 RANDOM_STATE = 42
 INITIAL_EXPERIMENTS = 3
 BATCH_SIZE = 3
-BUDGET_TOTAL_EXPERIMENTS = 150
-N_ITERATIONS = (BUDGET_TOTAL_EXPERIMENTS - INITIAL_EXPERIMENTS) // BATCH_SIZE  # 49
+BUDGET_TOTAL_EXPERIMENTS = 120
+N_ITERATIONS = (BUDGET_TOTAL_EXPERIMENTS - INITIAL_EXPERIMENTS) // BATCH_SIZE  # 39 iterations: 120 experiments = 3 starting experiments + 39 x 3
 N_RUNS = 5
 LLM_MAX_REPAIR_ATTEMPTS = 3
 
 SMOKE_TEST = False   # 1 run x 3 iterations first; flip to False for the real thing
 
-# Portability note (only change vs original gpt5mini_seed_rerun.py): POOL_DIR/
-# OUTPUT_DIR now default to ../../data and ../../outputs inside this repo,
-# overridable via ACTMOF_POOL_DIR / ACTMOF_OUTPUT_DIR. No prompt, model,
-# seed, or acquisition logic below was touched.
 _REPO_ROOT = Path(__file__).resolve().parents[2]
 POOL_DIR = Path(os.environ.get("ACTMOF_POOL_DIR", str(_REPO_ROOT / "data")))
 POOL_GLOB = "design_grid_part*.csv"
@@ -138,7 +109,7 @@ def in_range(cond: Dict[str, int]) -> bool:
 
 
 # ==============================================================================
-# 2. Schema + prompt (identical to Benchmark v3.ipynb)
+# 2. Schema + prompt
 # ==============================================================================
 
 class MOFConditionChoice(BaseModel):
@@ -218,9 +189,7 @@ def get_openai_client():
     from openai import OpenAI
 
     key = os.environ.get(OPENAI_API_KEY_ENV_VAR, "").strip()
-    if not key or key == "PASTE_YOUR_OPENAI_API_KEY_HERE":
-        key = OPENAI_API_KEY_FALLBACK.strip()
-    if not key or key == "PASTE_YOUR_OPENAI_API_KEY_HERE":
+    if not key:
         raise RuntimeError(f"No OpenAI API key found. Set {OPENAI_API_KEY_ENV_VAR}.")
     return OpenAI(api_key=key)
 
@@ -367,8 +336,7 @@ def run_canary_check(client) -> None:
         raise RuntimeError(f"[CANARY FAILED] reasoning_tokens={reasoning_tok} despite "
                             f"reasoning_effort={REASONING_EFFORT!r} - refusing to proceed.")
     if "seed" in _WARNED_DROPPED_KWARGS:
-        raise RuntimeError("[CANARY FAILED] seed was silently dropped - the whole point of this "
-                            "rerun is to control seed, refusing to proceed uncontrolled.")
+        raise RuntimeError("[CANARY FAILED] seed was silently dropped - refusing to proceed uncontrolled.")
     print(f"[canary] OK - reasoning_tokens={reasoning_tok}, seed accepted={'seed' not in _WARNED_DROPPED_KWARGS}, "
           f"temperature accepted={'temperature' not in _WARNED_DROPPED_KWARGS if TRY_TEMPERATURE else 'not attempted'}")
     print(f"[canary] sample conditions: {conditions}")
@@ -376,7 +344,7 @@ def run_canary_check(client) -> None:
 
 
 # ==============================================================================
-# 5. One full run (49 iterations)
+# 5. One full run (39 iterations)
 # ==============================================================================
 
 def run_single_run(client, oracle: np.ndarray, run_idx: int, history_writer) -> List[Dict[str, Any]]:

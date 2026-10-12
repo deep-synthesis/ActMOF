@@ -1,28 +1,29 @@
 # dataset_construction
 
-**Nothing here need be run to use this repository.** The virtual sandbox this script produces is already committed at `../data/design_grid_part*.csv` (~233MB, see the top-level README's "Where the data comes from" section). This folder exists so the sandbox remains independently reproducible and auditable, not because it constitutes a required setup step.
+`build_design_grid.py` builds the ActMOF landscape, `design_grid_part001.csv` to `design_grid_part007.csv`, from the
+95 measured MOF-321 syntheses. The landscape is already shipped in `../data/`, so this script only needs to be run to
+rebuild or check it.
 
-One script, `build_design_grid.py`, turns the ninety-five real MOF-321 microwave synthesis experiments, hardcoded near the top of the file as `X`, `max_intensity`, and `FWHM`, into the full ActMOF virtual sandbox, `design_grid_part001.csv` through `design_grid_part007.csv`, roughly 6.1 million rows, one row per integer combination of the five synthesis variables.
+## What the script does
 
-## How it works
+1. Two random forests (400 trees, `random_state = 42`) are fitted to the 95 measured conditions, one for the intensity
+   and one for the FWHM of the diagnostic PXRD reflection. Five-fold cross-validation is printed first.
+2. For each of the 6,101,172 conditions of the grid: a measured condition keeps its measured values; any other
+   condition gets the forest prediction, blended with nearby measured conditions (Rule 1: a measured condition within
+   one step in every variable -> 80% mean of these + 20% forest; Rule 2: one two steps away in one or two variables
+   -> 50/50).
+3. Conditions with intensity below 3000 or FWHM above 3 are set to no product (`q_final = 0`); otherwise
+   `q_final = round(intensity / FWHM)`.
 
-The script proceeds through four stages. It fits (i) **two independent `RandomForestRegressor` models** on the real experiments, `rf_int` predicting `Intensity_exp` and `rf_fwhm` predicting `FWHM_exp`, with five-fold cross-validation run first and its R2 and RMSE printed purely as a diagnostic before the final models are refit on all real data; (ii) it then walks every point in the full five-variable grid, reusing the real measured values verbatim for genuine experimental conditions and, for every other point, obtaining an RF prediction and blending it with nearby real experiments, whereby a Chebyshev distance no greater than one from a real point yields an eighty-percent real-neighbor average combined with twenty-percent RF, and a distance no greater than two yields an even blend, the exact rule being given in the module docstring and in `apply_rules_batch()`; (iii) it applies the failure-value post-processing in `postprocess_and_round_vec()` and computes `q_final` as `Intensity_final` divided by `FWHM_final` for every row; and (iv) it streams the result to `design_grid_part*.csv` in roughly one-million-row chunks.
+The columns are described in `../docs/data_dictionary.md`.
 
-See `../docs/data_dictionary.md` for the exact column schema and rules.
-
-## Provenance
-
-Copied verbatim from the first code cell of this project's original `construct dataset with time tracker.ipynb`. The only change made here concerns where the output CSVs are written (`OUTPUT_DIR`, described below); no RF hyperparameter, blending rule, or post-processing rule was touched.
-
-## Running it (optional, to rebuild or verify instead of trusting the shipped copy)
+## Running
 
 ```bash
 pip install -r ../requirements.txt
 python build_design_grid.py
 ```
 
-Output goes to `../data/` by default, so the benchmark scripts in `../benchmark/families/` find it with no extra configuration. Override with the `ACTMOF_DATA_DIR` environment variable should a different location be preferred.
-
-**Expect this to take a while.** The script predicts and rule-blends over roughly 6.1 million rows in batches of `BATCH_ROWS`, default 50,000, requiring anywhere from tens of minutes to a few hours depending on the CPU involved. There is no meaningful way to shorten this without changing `FULL_GRID` or `BOUNDS`, which would alter the dataset itself rather than merely the time taken to build it.
-
-Only `numpy`, `pandas`, and `scikit-learn` are required; neither R nor an API key is needed.
+The files are written to `../data/` (or to the folder given in the environment variable `ACTMOF_DATA_DIR`).
+The run takes from tens of minutes to a few hours, depending on the CPU. All random states are fixed, so a rebuild
+reproduces the shipped files, apart from small floating-point differences between versions of scikit-learn.

@@ -1,33 +1,19 @@
-"""
-================================================================================
-Seed-fixed rerun of the last 2 un-fixed LLM_PURE methods: gpt-4o and gpt-5.5
-================================================================================
+"""llm_pure_gpt4o_gpt55.py -- two LLM-only strategies: LLM_PURE_gpt-4o and LLM_PURE_gpt-5.5.
 
-Completes the seed-control fix for all 5 originally-LLM-involving methods.
-Already done separately: LLM_PURE_gpt-5-mini, HYBRID_GP_Matern52_{EI,PI}_ALT_gpt-5.5.
-This script does the remaining two: LLM_PURE_gpt-4o, LLM_PURE_gpt-5.5.
+In every iteration the model receives a system message (chemistry, objective, integer encoding of the five variables)
+and a user message with the 45 most recent experiments of the run (conditions and q), and returns three new conditions
+in a fixed JSON schema. The answer is checked by this script (range, no repeat of any earlier experiment of the run,
+no duplicate in the batch); an invalid answer is sent back with the error, up to three attempts, after which three
+random untried conditions are used. No candidate list is given to the model.
 
-Per-model handling (confirmed empirically earlier this session, see
-verify_original_models.py / gpt5mini_seed_rerun.py / hybrid_seed_rerun.py):
+Settings: gpt-4o at temperature 0.2; gpt-5.5 with reasoning_effort "none" (it accepts no temperature); a fixed seed
+(seed of the run + iteration) with every call. Before the runs, one test call stops the script if the API has
+dropped the seed, the temperature or the reasoning effort. Every iteration is logged to llm_pure_history.jsonl
+(accepted conditions and rationales, all attempts and errors, fallback, best-so-far, cost).
+Protocol: 5 runs, 3 starting experiments + 39 iterations of 3 experiments.
 
-  gpt-4o   - classic non-reasoning model. Accepts BOTH temperature AND seed.
-             No reasoning_effort kwarg is sent (doesn't apply / would error).
-  gpt-5.5  - reasoning-effort model family. Accepts seed but REJECTS
-             temperature server-side (hard API constraint, not a bug we can
-             fix). reasoning_effort must be "none" (gpt-5.5's own vocabulary
-             is {none,low,medium,high,xhigh} - NOT gpt-5-mini's {minimal,...}
-             - using the wrong word gets silently dropped by the kwarg-unwind
-             logic, defaulting back to "medium" and risking empty-content
-             output, the exact DeepSeek failure mode this whole exercise
-             exists to avoid).
-
-Protocol: window=45, BUDGET_TOTAL_EXPERIMENTS=150 (49 iterations after the
-initial 3), 5 runs each, same seed formula as Benchmark v3.ipynb
-(RANDOM_STATE + 10_000*run + stable_int(method)).
-
-Uses client.chat.completions.parse (not client.responses.parse - that
-endpoint has no seed parameter at all, see openai_window_ablation.py).
-================================================================================
+Requires the OpenAI API key in the environment variable OPENAI_API_KEY; the calls are billed.
+ACTMOF_POOL_DIR and ACTMOF_OUTPUT_DIR as in the other scripts. Set SMOKE_TEST = True for a short trial run.
 """
 
 from __future__ import annotations
@@ -50,16 +36,7 @@ from pydantic import BaseModel, Field
 # ==============================================================================
 
 OPENAI_API_KEY_ENV_VAR = "OPENAI_API_KEY"
-OPENAI_API_KEY_FALLBACK = "PASTE_YOUR_OPENAI_API_KEY_HERE"
 
-# Per-model config. reasoning_effort=None means "don't send the kwarg at all"
-# (classic models); a string value means "send this exact value".
-#
-# Observed 2026-09-08, both CONFIRMED via real API calls (response.model
-# read back directly): "gpt-4o" resolved to gpt-4o-2024-08-06; "gpt-5.5"
-# resolved to gpt-5.5-2026-04-23. Both aliases are used as-is below, not
-# pinned to these dated snapshots -- see ../README.md's "Resolved model
-# snapshots" section for why, and for how to re-check if this drifts.
 MODELS = [
     {
         "model": "gpt-4o",
@@ -84,17 +61,13 @@ WINDOW = 45
 RANDOM_STATE = 42
 INITIAL_EXPERIMENTS = 3
 BATCH_SIZE = 3
-BUDGET_TOTAL_EXPERIMENTS = 150
-N_ITERATIONS = (BUDGET_TOTAL_EXPERIMENTS - INITIAL_EXPERIMENTS) // BATCH_SIZE  # 49
+BUDGET_TOTAL_EXPERIMENTS = 120
+N_ITERATIONS = (BUDGET_TOTAL_EXPERIMENTS - INITIAL_EXPERIMENTS) // BATCH_SIZE  # 39 iterations: 120 experiments = 3 starting experiments + 39 x 3
 N_RUNS = 5
 LLM_MAX_REPAIR_ATTEMPTS = 3
 
 SMOKE_TEST = False   # 1 model x 1 run x 3 iterations first
 
-# Portability note (only change vs original llm_pure_seed_rerun.py): POOL_DIR/
-# OUTPUT_DIR now default to ../../data and ../../outputs inside this repo,
-# overridable via ACTMOF_POOL_DIR / ACTMOF_OUTPUT_DIR. No prompt, model,
-# seed, or acquisition logic below was touched.
 _REPO_ROOT = Path(__file__).resolve().parents[2]
 POOL_DIR = Path(os.environ.get("ACTMOF_POOL_DIR", str(_REPO_ROOT / "data")))
 POOL_GLOB = "design_grid_part*.csv"
@@ -146,7 +119,7 @@ def in_range(cond: Dict[str, int]) -> bool:
 
 
 # ==============================================================================
-# 2. Schema + prompt (identical to Benchmark v3.ipynb)
+# 2. Schema + prompt
 # ==============================================================================
 
 class MOFConditionChoice(BaseModel):
@@ -222,9 +195,7 @@ def get_openai_client():
     from openai import OpenAI
 
     key = os.environ.get(OPENAI_API_KEY_ENV_VAR, "").strip()
-    if not key or key == "PASTE_YOUR_OPENAI_API_KEY_HERE":
-        key = OPENAI_API_KEY_FALLBACK.strip()
-    if not key or key == "PASTE_YOUR_OPENAI_API_KEY_HERE":
+    if not key:
         raise RuntimeError(f"No OpenAI API key found. Set {OPENAI_API_KEY_ENV_VAR}.")
     return OpenAI(api_key=key)
 
@@ -394,7 +365,7 @@ def run_canary_check(client, cfg: Dict[str, Any]) -> None:
 
 
 # ==============================================================================
-# 4. One full run (LLM_PURE style, 49 iterations)
+# 4. One full run (LLM_PURE style, 39 iterations)
 # ==============================================================================
 
 def run_single_run(client, cfg: Dict[str, Any], oracle: np.ndarray, run_idx: int, history_writer

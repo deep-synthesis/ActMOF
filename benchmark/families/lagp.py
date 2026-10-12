@@ -1,26 +1,12 @@
-"""
-================================================================================
-Standalone rerun of LAGP_ALC_EI / LAGP_NN_EI with the fixed R wrapper
-================================================================================
+"""lagp.py -- the two local approximate Gaussian-process strategies (LAGP_ALC_EI, LAGP_NN_EI).
 
-Re-implements just enough of Benchmark v3.ipynb's active-learning loop
-(EI acquisition, greedy diverse batch selection, log1p target transform,
-ACQ_CANDIDATES_PER_ITER_SLOW=4000 for "slow" methods, the same
-RANDOM_STATE/stable_int seed formula) to rerun ONLY the two laGP methods with
-the corrected R call (see the fix applied directly to Benchmark v3.ipynb's
-RLaGPSurrogate.predict()):
-  - aGP(X=, Z=, XX=) instead of the broken aGP(X=Xnew, Xref=, Zref=)
-  - reads the variance from p[["var"]] instead of the nonexistent p[["s2"]]
+The surrogate is laGP::aGP (R, called through rpy2): for every candidate a small GP is fitted to the 10-60 nearest
+tested conditions, chosen by the ALC criterion or as nearest neighbours; EI is computed from its prediction.
+Because one local model is fitted per candidate, 4,000 candidates are scored per iteration instead of 15,000.
+Protocol as in core29_gp_ml_tree_rl_mof.py: 5 runs, 3 starting experiments + 39 iterations of 3 experiments.
 
-No LLM/API involved at all - this is pure R (laGP) + Python, zero API cost.
-Ground truth q_final comes from the same real design_grid_part*.csv full
-factorial grid used everywhere else in this project (O(1) lookup array, same
-trick as deepseek_window_ablation.py / openai_window_ablation.py).
-
-Matches the original protocol: 5 runs x 49 iterations (BUDGET_TOTAL=150,
-INITIAL=3, batch=3), not the 41-iteration shortcut used for the window
-ablations - these numbers are meant to go into the real final_summary table.
-================================================================================
+Requires R with the laGP package and rpy2. The R start-up below is written for Windows; set ACTMOF_R_HOME to the
+folder of the R installation. ACTMOF_POOL_DIR and ACTMOF_OUTPUT_DIR as in the other scripts.
 """
 
 from __future__ import annotations
@@ -38,13 +24,9 @@ import pandas as pd
 from scipy.stats import norm
 
 # ==============================================================================
-# 0. R / rpy2 bootstrap (mirrors what we validated interactively)
+# 0. R / rpy2 bootstrap
 # ==============================================================================
 
-# Portability note: R_HOME is overridable via ACTMOF_R_HOME (default matches
-# the R version this method was validated against). Everything else in this
-# R-bootstrap block, and all laGP/aGP call logic below, is unchanged from the
-# original lagp_rerun.py.
 R_HOME = Path(os.environ.get("ACTMOF_R_HOME", r"C:\Program Files\R\R-4.6.1"))
 R_LIBS_USER = Path.home() / "R" / "win-library" / "4.6"
 os.environ["R_HOME"] = str(R_HOME)
@@ -54,10 +36,6 @@ os.environ["R_LIBS"] = str(R_LIBS_USER)
 _bin_x64 = R_HOME / "bin" / "x64"
 os.add_dll_directory(str(_bin_x64))
 os.environ["PATH"] = str(_bin_x64) + os.pathsep + os.environ.get("PATH", "")
-# Preload core R DLLs in dependency order BEFORE rpy2 spins up its embedded R
-# session - without this, R's own package DLLs (e.g. stats.dll) fail to load
-# with "LoadLibrary failure: the specified module could not be found" even
-# though every file is physically present (see conversation history).
 for _dll in ["R.dll", "Rblas.dll", "Rlapack.dll", "Riconv.dll"]:
     ctypes.CDLL(str(_bin_x64 / _dll))
 
@@ -116,14 +94,13 @@ def lagp_predict(X_new: np.ndarray, X_train: np.ndarray, y_train: np.ndarray,
 
 
 # ==============================================================================
-# 1. Config - mirrors Benchmark v3.ipynb exactly for these two methods
 # ==============================================================================
 
 RANDOM_STATE = 42
-BUDGET_TOTAL_EXPERIMENTS = 150
+BUDGET_TOTAL_EXPERIMENTS = 120
 INITIAL_EXPERIMENTS = 3
 BATCH_SIZE = 3
-N_ITERATIONS = (BUDGET_TOTAL_EXPERIMENTS - INITIAL_EXPERIMENTS) // BATCH_SIZE  # 49
+N_ITERATIONS = (BUDGET_TOTAL_EXPERIMENTS - INITIAL_EXPERIMENTS) // BATCH_SIZE  # 39 iterations: 120 experiments = 3 starting experiments + 39 x 3
 N_RUNS = 5
 ACQ_CANDIDATES_PER_ITER_SLOW = 4_000   # laGP is flagged "slow" in the registry
 DIVERSITY_LAMBDA = 0.03
@@ -135,10 +112,6 @@ METHODS = [
     {"name": "LAGP_NN_EI", "lagp_method": "nn", "start": 10, "end": 60},
 ]
 
-# Portability note (only change vs original lagp_rerun.py): POOL_DIR/
-# OUTPUT_DIR now default to ../../data and ../../outputs inside this repo,
-# overridable via ACTMOF_POOL_DIR / ACTMOF_OUTPUT_DIR. The aGP() call and
-# argument names below (the actual bugfix) are untouched.
 _REPO_ROOT = Path(__file__).resolve().parents[2]
 POOL_DIR = Path(os.environ.get("ACTMOF_POOL_DIR", str(_REPO_ROOT / "data")))
 POOL_GLOB = "design_grid_part*.csv"
@@ -155,7 +128,6 @@ OUTPUT_DIR = Path(os.environ.get("ACTMOF_OUTPUT_DIR", str(_REPO_ROOT / "outputs"
 
 
 def stable_int(text: str, modulo: int = 2**31 - 1) -> int:
-    """Byte-for-byte identical to Benchmark v3.ipynb's stable_int()."""
     return int(hashlib.md5(text.encode("utf-8")).hexdigest()[:12], 16) % modulo
 
 
@@ -208,7 +180,6 @@ def gaussian_ei(mu: np.ndarray, sd: np.ndarray, best: float, xi: float = 0.01) -
 
 def greedy_diverse_batch(cand_local_idx: np.ndarray, acq: np.ndarray, X_scaled_cand: np.ndarray,
                           k: int, rng: np.random.Generator, diversity_lambda: float) -> np.ndarray:
-    """Same local-penalization greedy batch rule as Benchmark v3.ipynb."""
     if len(cand_local_idx) <= k:
         return cand_local_idx
     acq = np.where(np.isfinite(acq), acq, -np.inf)
@@ -237,7 +208,7 @@ def greedy_diverse_batch(cand_local_idx: np.ndarray, acq: np.ndarray, X_scaled_c
 
 def sample_untried_candidates(rng: np.random.Generator, tried: set, n: int) -> List[Dict[str, int]]:
     """Rejection-sample n distinct, untried, in-range condition dicts.
-    Pool has 6.1M combinations and at most 150 are ever tried, so collisions
+    Pool has 6.1M combinations and at most 120 are ever tried, so collisions
     are rare and this converges essentially immediately."""
     out = []
     seen_local = set()
