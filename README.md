@@ -8,9 +8,6 @@ An experiment-grounded benchmark for choosing how to search MOF synthesis condit
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-C41B7E.svg)](LICENSE)
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-3776AB.svg?logo=python&logoColor=white)](requirements.txt)
-[![Landscape](https://img.shields.io/badge/Landscape-6%2C101%2C172%20conditions-DE78AE.svg)](data/)
-[![Strategies](https://img.shields.io/badge/Search%20strategies-39-2171B5.svg)](docs/method_registry.csv)
-[![Wet-lab validation](https://img.shields.io/badge/Validated%20on-6%20Al%20MOFs-1baf7a.svg)](wetlab/)
 [![Web app](https://img.shields.io/badge/Web%20%26%20desktop%20app-ActMOF__Website-8b5cd6.svg)](https://github.com/Mr-Thiol/ActMOF_Website)
 
 <img src="docs/assets/toc.png" alt="ActMOF: benchmark, programmable synthesis and PXRD in an active-learning loop" width="520">
